@@ -228,6 +228,15 @@
     .calendar-day.selected { background:#dcfce7; border-color:#16a34a; }
     .calendar-dot { display:block; width:6px; height:6px; border-radius:50%; background:#2563eb; margin:4px auto 0; }
     .calendar-events { margin-top:14px; padding-top:12px; border-top:1px solid #e2e8f0; color:#475569; font-size:14px; }
+    .budget-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .budget-item { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; }
+    .budget-item span { display:block; color:#64748b; font-size:13px; }
+    .budget-item strong { display:block; margin-top:6px; font-size:19px; }
+    .budget-wide { grid-column:1/-1; }
+    .budget-track { height:9px; background:#e2e8f0; border-radius:20px; overflow:hidden; margin-top:9px; }
+    .budget-track i { display:block; height:100%; background:#16a34a; }
+    .budget-note { color:#64748b; font-size:12px; margin-top:7px; line-height:1.6; }
+    @media(max-width:600px){ .budget-grid{grid-template-columns:1fr 1fr;} }
     @media(max-width:600px) { .goal-form-grid {grid-template-columns:1fr;} .calendar-day {min-height:46px;font-size:13px;padding:4px 1px;} }
 \n    @media (max-width: 600px) {
       .cards {
@@ -376,6 +385,25 @@
 
     </section>
 
+    <!-- الميزانية الشهرية -->
+    <section class="section" id="monthlyBudgetSection">
+      <div class="section-title"><h2>📊 ميزانيتي الشهرية</h2></div>
+      <div class="budget-grid">
+        <div class="budget-item budget-wide"><span>الدخل الشهري المعتمد</span><strong id="budgetIncome">73,000 دج</strong><div class="budget-note">راتب شهر واحد بعد اعتماد مبلغ 73,000 دج.</div></div>
+        <div class="budget-item"><span>قسط عدل — خصم آلي</span><strong id="budgetAdl">12,000 دج</strong></div>
+        <div class="budget-item"><span>قسط الهاتف — دفع يدوي</span><strong id="budgetPhone">5,000 دج</strong></div>
+        <div class="budget-item"><span>الكهرباء والغاز والماء</span><strong id="budgetUtilities">4,000 دج</strong></div>
+        <div class="budget-item"><span>الدواء والطبيب</span><strong id="budgetHealth">4,000 دج</strong></div>
+        <div class="budget-item"><span>النقل</span><strong id="budgetTransport">2,000 دج</strong></div>
+        <div class="budget-item"><span>الادخار الشهري المستهدف</span><strong id="budgetSavings">10,000 دج</strong></div>
+        <div class="budget-item budget-wide"><span>المتبقي بعد الالتزامات والادخار</span><strong id="budgetRemainder">36,000 دج</strong></div>
+        <div class="budget-item"><span>60% للمصروفات</span><strong id="budgetSpending">21,600 دج</strong><div class="budget-track"><i style="width:60%"></i></div></div>
+        <div class="budget-item"><span>40% احتياطي</span><strong id="budgetReserve">14,400 دج</strong><div class="budget-track"><i style="width:40%;background:#2563eb"></i></div></div>
+        <div class="budget-item budget-wide"><span>المصروف اليومي التقريبي</span><strong id="budgetDaily">720 دج / يوم</strong><div class="budget-note">على أساس 30 يوماً، ويُحسب من مخصص المصروفات البالغ 21,600 دج.</div></div>
+        <div class="budget-item budget-wide"><span>متابعة قسط الهاتف</span><strong id="phoneRemaining">38,000 دج متبقية</strong><div class="budget-note">القيمة الإجمالية 50,000 دج، المدفوع حتى الآن 12,000 دج. القسط الشهري 5,000 دج؛ المدة المتبقية 8 أشهر (7 أقساط كاملة وقسط أخير 3,000 دج).</div></div>
+      </div>
+    </section>
+
     <!-- المصاريف -->
     <section class="section" id="expensesSection">
       <div class="section-title">
@@ -482,6 +510,28 @@
       elements.error.textContent = "تعذر حفظ البيانات في المتصفح. تحقق من مساحة التخزين وإعدادات الخصوصية.";
       return false;
     }
+  }
+
+  // عرض خطة الميزانية الشهرية المعتمدة دون خصمها مرة ثانية من سجل الرصيد
+  function renderMonthlyBudget() {
+    const income = 73000, adl = 12000, phone = 5000, utilities = 4000;
+    const health = 4000, transport = 2000, savings = 10000;
+    const remainder = income - adl - phone - utilities - health - transport - savings;
+    const spending = Math.round(remainder * 0.60);
+    const reserve = remainder - spending;
+    const fmt = value => money(value);
+    byId("budgetIncome").textContent = fmt(income);
+    byId("budgetAdl").textContent = fmt(adl);
+    byId("budgetPhone").textContent = fmt(phone);
+    byId("budgetUtilities").textContent = fmt(utilities);
+    byId("budgetHealth").textContent = fmt(health);
+    byId("budgetTransport").textContent = fmt(transport);
+    byId("budgetSavings").textContent = fmt(savings);
+    byId("budgetRemainder").textContent = fmt(remainder);
+    byId("budgetSpending").textContent = fmt(spending);
+    byId("budgetReserve").textContent = fmt(reserve);
+    byId("budgetDaily").textContent = fmt(spending / 30) + " / يوم";
+    byId("phoneRemaining").textContent = fmt(38000) + " متبقية";
   }
 
   function render() {
@@ -806,6 +856,7 @@
   saveGoals(); renderGoals(); renderCalendar();
 
   elements.date.max = today();
+  renderMonthlyBudget();
   render();
   saveState();
 })();
