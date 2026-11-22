@@ -448,6 +448,29 @@
     .expense-category-select{display:block;width:100%;min-height:44px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#1f2937;font-size:15px}
     @media(max-width:600px){.report-cards strong{font-size:16px}.report-filter{align-items:flex-start;flex-direction:column}.report-filter input{max-width:none;width:100%}}
 
+  
+    /* SISSTO Fast Food - isolated module */
+    .ff-wrap{display:grid;gap:12px}
+    .ff-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .ff-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;min-width:0}
+    .ff-stat span{display:block;color:#64748b;font-size:12px}
+    .ff-stat strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}
+    .ff-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin:10px 0}
+    .ff-field{min-width:0}.ff-field.wide{grid-column:1/-1}
+    .ff-field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}
+    .ff-field input,.ff-field select,.ff-field textarea{width:100%;min-height:41px;padding:9px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font:inherit;font-size:14px}
+    .ff-field textarea{resize:vertical;min-height:65px}
+    .ff-form button{grid-column:1/-1;min-height:42px}
+    .ff-list{display:grid;gap:7px;margin-top:10px}
+    .ff-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+    .ff-row strong{display:block;font-size:13px}.ff-row small{display:block;color:#64748b;font-size:11px;margin-top:4px;line-height:1.5}
+    .ff-row .ff-value{font-weight:700;white-space:nowrap;font-size:13px}
+    .ff-empty{padding:12px;text-align:center;color:#64748b;font-size:12px}
+    .ff-note{font-size:11px;color:#64748b;line-height:1.6;margin:7px 0}
+    .ff-subhead{font-size:14px;margin:12px 0 6px}
+    .ff-danger{color:#b91c1c}.ff-positive{color:#047857}
+    @media(max-width:420px){.ff-form{grid-template-columns:1fr}.ff-field.wide{grid-column:auto}.ff-stats{gap:6px}.ff-stat{padding:10px}.ff-stat strong{font-size:16px}}
+
   </style>
 </head>
 
@@ -715,6 +738,114 @@
     </details>
 
   </main>
+
+
+    <details class="compact-section" id="fastFoodSection">
+      <summary>🍔 إدارة الفاست فود والمحاسبة</summary>
+      <div class="compact-content ff-wrap">
+        <p class="ff-note">دفتر مستقل للمحل. لا يؤثر في الرصيد الشخصي أو سجل المصاريف الحالي.</p>
+        <div class="ff-stats">
+          <div class="ff-stat"><span>إيرادات الشهر</span><strong id="ffRevenue">0 دج</strong></div>
+          <div class="ff-stat"><span>تكلفة المنتجات المباعة</span><strong id="ffCogs">0 دج</strong></div>
+          <div class="ff-stat"><span>المصاريف التشغيلية والأجور</span><strong id="ffOperating">0 دج</strong></div>
+          <div class="ff-stat"><span>الربح الصافي التقديري</span><strong id="ffNet">0 دج</strong></div>
+        </div>
+
+        <details class="compact-section">
+          <summary>📋 المنتجات وتكلفة التحضير</summary>
+          <div class="compact-content">
+            <p class="ff-note">أدخل تكلفة تحضير الوحدة الواحدة بعد حساب مكونات الوصفة. لا نضع أسعاراً افتراضية.</p>
+            <form id="ffProductForm" class="ff-form">
+              <div class="ff-field"><label for="ffProductName">اسم المنتج</label><input id="ffProductName" required maxlength="60" placeholder="مثلاً: بيتزا"></div>
+              <div class="ff-field"><label for="ffProductPrice">سعر البيع (دج)</label><input id="ffProductPrice" type="number" min="0" step="0.01" required></div>
+              <div class="ff-field"><label for="ffProductCost">تكلفة تحضير الوحدة (دج)</label><input id="ffProductCost" type="number" min="0" step="0.01" required></div>
+              <div class="ff-field wide"><label for="ffProductRecipe">مكونات الوصفة / ملاحظات</label><textarea id="ffProductRecipe" maxlength="500" placeholder="المقادير والكميات وملاحظات التحضير"></textarea></div>
+              <button class="button" type="submit">حفظ المنتج والتكلفة</button>
+            </form>
+            <div id="ffProducts" class="ff-list"></div>
+          </div>
+        </details>
+
+        <details class="compact-section">
+          <summary>💰 تسجيل المبيعات (تفصيلية أو ملخص يومي)</summary>
+          <div class="compact-content">
+            <form id="ffSaleForm" class="ff-form">
+              <div class="ff-field"><label for="ffSaleMode">طريقة التسجيل</label><select id="ffSaleMode"><option value="individual">عملية بيع منفردة</option><option value="daily">ملخص يومي للمنتج</option></select></div>
+              <div class="ff-field"><label for="ffSaleDate">التاريخ</label><input id="ffSaleDate" type="date" required></div>
+              <div class="ff-field"><label for="ffSaleProduct">المنتج</label><select id="ffSaleProduct" required></select></div>
+              <div class="ff-field"><label for="ffSaleQty">الكمية</label><input id="ffSaleQty" type="number" min="1" step="1" value="1" required></div>
+              <div class="ff-field"><label for="ffSaleUnitPrice">سعر البيع للوحدة (دج)</label><input id="ffSaleUnitPrice" type="number" min="0" step="0.01" required></div>
+              <div class="ff-field"><label for="ffSaleTotal">المبلغ الإجمالي (دج)</label><input id="ffSaleTotal" type="number" min="0" step="0.01" required></div>
+              <div class="ff-field wide"><label for="ffSaleNote">ملاحظة (اختياري)</label><input id="ffSaleNote" maxlength="150"></div>
+              <button class="button" type="submit">حفظ المبيعات</button>
+            </form>
+            <p class="ff-note">يمكن تسجيل المبيعات كل عملية على حدة أو إدخال مجموع الكمية والمبلغ لكل منتج في نهاية اليوم.</p>
+            <div id="ffSales" class="ff-list"></div>
+          </div>
+        </details>
+
+        <details class="compact-section">
+          <summary>🧾 المشتريات والموردون</summary>
+          <div class="compact-content">
+            <form id="ffPurchaseForm" class="ff-form">
+              <div class="ff-field"><label for="ffPurchaseItem">المادة / المشتريات</label><input id="ffPurchaseItem" required maxlength="80"></div>
+              <div class="ff-field"><label for="ffPurchaseSupplier">اسم المورد</label><input id="ffPurchaseSupplier" maxlength="80"></div>
+              <div class="ff-field"><label for="ffPurchaseAmount">قيمة الفاتورة (دج)</label><input id="ffPurchaseAmount" type="number" min="0.01" step="0.01" required></div>
+              <div class="ff-field"><label for="ffPurchasePaid">المبلغ المدفوع (دج)</label><input id="ffPurchasePaid" type="number" min="0" step="0.01" value="0" required></div>
+              <div class="ff-field"><label for="ffPurchaseDate">التاريخ</label><input id="ffPurchaseDate" type="date" required></div>
+              <div class="ff-field"><label for="ffPurchaseQty">الكمية (اختياري)</label><input id="ffPurchaseQty" type="number" min="0" step="0.001"></div>
+              <button class="button" type="submit">حفظ المشتريات</button>
+            </form>
+            <div id="ffPurchases" class="ff-list"></div>
+            <h3 class="ff-subhead">أرصدة الموردين غير المسددة</h3>
+            <div id="ffSuppliers" class="ff-list"></div>
+          </div>
+        </details>
+
+        <details class="compact-section">
+          <summary>⚙️ المصاريف التشغيلية</summary>
+          <div class="compact-content">
+            <form id="ffOperatingForm" class="ff-form">
+              <div class="ff-field"><label for="ffOperatingName">نوع المصروف</label><input id="ffOperatingName" required maxlength="80" placeholder="غاز، كهرباء، صيانة..."></div>
+              <div class="ff-field"><label for="ffOperatingAmount">المبلغ (دج)</label><input id="ffOperatingAmount" type="number" min="0.01" step="0.01" required></div>
+              <div class="ff-field"><label for="ffOperatingDate">التاريخ</label><input id="ffOperatingDate" type="date" required></div>
+              <div class="ff-field"><label for="ffOperatingNote">ملاحظة</label><input id="ffOperatingNote" maxlength="150"></div>
+              <button class="button" type="submit">حفظ المصروف</button>
+            </form>
+            <div id="ffOperatingList" class="ff-list"></div>
+          </div>
+        </details>
+
+        <details class="compact-section">
+          <summary>👷 أجور العمال</summary>
+          <div class="compact-content">
+            <form id="ffWageForm" class="ff-form">
+              <div class="ff-field"><label for="ffWageWorker">اسم العامل</label><input id="ffWageWorker" required maxlength="80"></div>
+              <div class="ff-field"><label for="ffWageAmount">المبلغ (دج)</label><input id="ffWageAmount" type="number" min="0.01" step="0.01" required></div>
+              <div class="ff-field"><label for="ffWageDate">تاريخ الدفع</label><input id="ffWageDate" type="date" required></div>
+              <div class="ff-field"><label for="ffWageNote">ملاحظة</label><input id="ffWageNote" maxlength="150"></div>
+              <button class="button" type="submit">تسجيل الأجر</button>
+            </form>
+            <div id="ffWages" class="ff-list"></div>
+          </div>
+        </details>
+
+        <details class="compact-section">
+          <summary>↗️ السحب الشخصي من صندوق المحل</summary>
+          <div class="compact-content">
+            <form id="ffWithdrawalForm" class="ff-form">
+              <div class="ff-field"><label for="ffWithdrawalAmount">المبلغ المسحوب (دج)</label><input id="ffWithdrawalAmount" type="number" min="0.01" step="0.01" required></div>
+              <div class="ff-field"><label for="ffWithdrawalDate">التاريخ</label><input id="ffWithdrawalDate" type="date" required></div>
+              <div class="ff-field wide"><label for="ffWithdrawalNote">سبب السحب</label><input id="ffWithdrawalNote" maxlength="150"></div>
+              <button class="button" type="submit">تسجيل السحب</button>
+            </form>
+            <p class="ff-note">السحب الشخصي يظهر كتدفق خارج من الصندوق، لكنه لا يُخصم من الربح التشغيلي.</p>
+            <div id="ffWithdrawals" class="ff-list"></div>
+          </div>
+        </details>
+        <p class="ff-note">تنبيه محاسبي: المشتريات تُسجل لمتابعة المخزون وديون الموردين، ولا تُطرح مباشرة من الربح. الربح التقديري = المبيعات − تكلفة الوحدات المباعة − المصاريف التشغيلية − الأجور. يلزم تحديث تكلفة المنتج عند تغير أسعار المواد.</p>
+      </div>
+    </details>
 
   <footer class="footer">
     SISSTO © 2026
@@ -1477,6 +1608,146 @@
   dashboardReady = true;
   render();
   saveState();
+})();
+</script>
+
+
+<script>
+(() => {
+  "use strict";
+  const KEY = "sissto_fastfood_v1";
+  const $ = id => document.getElementById(id);
+  const today = () => {
+    const d = new Date();
+    return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+  };
+  const money = n => (Number(n)||0).toLocaleString("fr-DZ",{maximumFractionDigits:2}) + " دج";
+  const makeId = () => "ff-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  const defaults = ["البيتزا","الهامبرغر","الدجاج المتبل","الكارانطيطا"].map(name => ({id:makeId(),name,price:0,cost:0,recipe:""}));
+  function load() {
+    try {
+      const v = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!v || typeof v !== "object") return {products:defaults,sales:[],purchases:[],operating:[],wages:[],withdrawals:[]};
+      return {
+        products:Array.isArray(v.products)?v.products:defaults,
+        sales:Array.isArray(v.sales)?v.sales:[],
+        purchases:Array.isArray(v.purchases)?v.purchases:[],
+        operating:Array.isArray(v.operating)?v.operating:[],
+        wages:Array.isArray(v.wages)?v.wages:[],
+        withdrawals:Array.isArray(v.withdrawals)?v.withdrawals:[]
+      };
+    } catch (_) { return {products:defaults,sales:[],purchases:[],operating:[],wages:[],withdrawals:[]}; }
+  }
+  let data = load();
+  function save() {
+    try { localStorage.setItem(KEY,JSON.stringify(data)); return true; }
+    catch (_) { alert("تعذر حفظ بيانات المحل في المتصفح. لا تمسح بيانات المتصفح قبل أخذ نسخة احتياطية."); return false; }
+  }
+  function addRow(boxId,title,meta,value,cls="") {
+    const box=$(boxId), row=document.createElement("div"); row.className="ff-row";
+    const left=document.createElement("div"), strong=document.createElement("strong"), small=document.createElement("small");
+    strong.textContent=title; small.textContent=meta||""; left.append(strong,small);
+    const amount=document.createElement("span"); amount.className="ff-value "+cls; amount.textContent=value;
+    row.append(left,amount); box.append(row);
+  }
+  function render() {
+    const month=today().slice(0,7);
+    const sales=data.sales.filter(x=>x.date&&x.date.slice(0,7)===month);
+    const purchases=data.purchases.filter(x=>x.date&&x.date.slice(0,7)===month);
+    const ops=data.operating.filter(x=>x.date&&x.date.slice(0,7)===month);
+    const wages=data.wages.filter(x=>x.date&&x.date.slice(0,7)===month);
+    const revenue=sales.reduce((a,x)=>a+x.total,0);
+    const cogs=sales.reduce((a,x)=>a+(Number(data.products.find(p=>p.id===x.productId)?.cost)||0)*x.qty,0);
+    const operating=ops.reduce((a,x)=>a+x.amount,0)+wages.reduce((a,x)=>a+x.amount,0);
+    $("ffRevenue").textContent=money(revenue);
+    $("ffCogs").textContent=money(cogs);
+    $("ffOperating").textContent=money(operating);
+    $("ffNet").textContent=money(revenue-cogs-operating);
+    const productSelect=$("ffSaleProduct"), previous=productSelect.value;
+    productSelect.replaceChildren();
+    data.products.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name;productSelect.append(o);});
+    if(data.products.some(p=>p.id===previous)) productSelect.value=previous;
+    $("ffProducts").replaceChildren();
+    data.products.forEach(p=>addRow("ffProducts",p.name,"سعر البيع: "+money(p.price)+" · تكلفة الوحدة: "+money(p.cost)+(p.recipe?" · "+p.recipe:""),"هامش الوحدة: "+money(p.price-p.cost),p.price>=p.cost?"ff-positive":"ff-danger"));
+    const lists=[["ffSales",data.sales,"مبيعات"],["ffPurchases",data.purchases,"مشتريات"],["ffOperatingList",data.operating,"مصاريف"],["ffWages",data.wages,"أجور"],["ffWithdrawals",data.withdrawals,"سحوبات"]];
+    lists.forEach(([id,arr])=>{
+      $(id).replaceChildren();
+      if(!arr.length){const p=document.createElement("p");p.className="ff-empty";p.textContent="لا توجد سجلات بعد.";$(id).append(p);return;}
+      [...arr].slice().reverse().slice(0,30).forEach(x=>{
+        let title=x.productName||x.item||x.name||x.worker||"سجل";
+        let meta=x.date||"";
+        if(x.qty) meta+=" · الكمية: "+x.qty;
+        if(x.supplier) meta+=" · المورد: "+x.supplier;
+        if(x.note) meta+=" · "+x.note;
+        if(x.paid!==undefined) meta+=" · مدفوع: "+money(x.paid);
+        addRow(id,title,meta,money(x.total??x.amount));
+      });
+    });
+    const debts={};
+    data.purchases.forEach(p=>{const due=Math.max(0,p.amount-p.paid);if(due)debts[p.supplier||"غير محدد"]=(debts[p.supplier||"غير محدد"]||0)+due;});
+    $("ffSuppliers").replaceChildren();
+    const names=Object.keys(debts);
+    if(!names.length){const p=document.createElement("p");p.className="ff-empty";p.textContent="لا توجد مبالغ غير مسددة للموردين."; $("ffSuppliers").append(p);}
+    names.forEach(n=>addRow("ffSuppliers",n,"الرصيد المتبقي على المورد","مديونية: "+money(debts[n]),"ff-danger"));
+  }
+  function num(id){return Number($(id).value);}
+  function validAmount(v,allowZero=false){return Number.isFinite(v)&&(allowZero?v>=0:v>0)&&v<=100000000;}
+  function setDates(){
+    ["ffSaleDate","ffPurchaseDate","ffOperatingDate","ffWageDate","ffWithdrawalDate"].forEach(id=>{$(id).value=today();$(id).max=today();});
+  }
+  $("ffProductForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const name=$("ffProductName").value.trim(),price=num("ffProductPrice"),cost=num("ffProductCost"),recipe=$("ffProductRecipe").value.trim();
+    if(!name||!validAmount(price,true)||!validAmount(cost,true)){alert("تحقق من اسم المنتج والأسعار والتكلفة.");return;}
+    const found=data.products.find(p=>p.name.toLowerCase()===name.toLowerCase());
+    if(found) Object.assign(found,{price,cost,recipe});
+    else data.products.push({id:makeId(),name,price,cost,recipe});
+    if(save()){e.target.reset();render();}
+  });
+  $("ffSaleProduct").addEventListener("change",()=>{
+    const p=data.products.find(x=>x.id===$("ffSaleProduct").value);
+    if(p){$("ffSaleUnitPrice").value=p.price;$("ffSaleTotal").value=p.price*(num("ffSaleQty")||1);}
+  });
+  $("ffSaleQty").addEventListener("input",()=>{
+    const p=data.products.find(x=>x.id===$("ffSaleProduct").value);
+    if(p&&$("ffSaleUnitPrice").value)$("ffSaleTotal").value=(num("ffSaleQty")||0)*num("ffSaleUnitPrice");
+  });
+  $("ffSaleUnitPrice").addEventListener("input",()=>{$("ffSaleTotal").value=(num("ffSaleQty")||0)*num("ffSaleUnitPrice");});
+  $("ffSaleForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const p=data.products.find(x=>x.id===$("ffSaleProduct").value),qty=num("ffSaleQty"),unit=num("ffSaleUnitPrice"),total=num("ffSaleTotal"),date=$("ffSaleDate").value;
+    if(!p||!Number.isInteger(qty)||qty<1||!validAmount(unit,true)||!validAmount(total,true)||!date||date>today()||Math.abs(total-qty*unit)>0.02){alert("تحقق من المنتج والكمية والأسعار والتاريخ. يجب أن يساوي الإجمالي الكمية × سعر الوحدة.");return;}
+    data.sales.push({id:makeId(),mode:$("ffSaleMode").value,productId:p.id,productName:p.name,qty,unitPrice:unit,total,date,note:$("ffSaleNote").value.trim()});
+    if(save()){e.target.reset();$("ffSaleQty").value=1;$("ffSaleDate").value=today();render();}
+  });
+  $("ffPurchaseForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const amount=num("ffPurchaseAmount"),paid=num("ffPurchasePaid"),date=$("ffPurchaseDate").value;
+    if(!validAmount(amount)||!validAmount(paid,true)||paid>amount||!date||date>today()){alert("تحقق من قيمة الفاتورة والمبلغ المدفوع والتاريخ.");return;}
+    data.purchases.push({id:makeId(),item:$("ffPurchaseItem").value.trim(),supplier:$("ffPurchaseSupplier").value.trim(),amount,paid,qty:num("ffPurchaseQty")||0,date});
+    if(save()){e.target.reset();$("ffPurchaseDate").value=today();$("ffPurchasePaid").value=0;render();}
+  });
+  $("ffOperatingForm").addEventListener("submit",e=>{
+    e.preventDefault();const amount=num("ffOperatingAmount"),date=$("ffOperatingDate").value;
+    if(!validAmount(amount)||!date||date>today()){alert("تحقق من المبلغ والتاريخ.");return;}
+    data.operating.push({id:makeId(),name:$("ffOperatingName").value.trim(),amount,date,note:$("ffOperatingNote").value.trim()});
+    if(save()){e.target.reset();$("ffOperatingDate").value=today();render();}
+  });
+  $("ffWageForm").addEventListener("submit",e=>{
+    e.preventDefault();const amount=num("ffWageAmount"),date=$("ffWageDate").value;
+    if(!validAmount(amount)||!date||date>today()){alert("تحقق من الأجر والتاريخ.");return;}
+    data.wages.push({id:makeId(),worker:$("ffWageWorker").value.trim(),amount,date,note:$("ffWageNote").value.trim()});
+    if(save()){e.target.reset();$("ffWageDate").value=today();render();}
+  });
+  $("ffWithdrawalForm").addEventListener("submit",e=>{
+    e.preventDefault();const amount=num("ffWithdrawalAmount"),date=$("ffWithdrawalDate").value;
+    if(!validAmount(amount)||!date||date>today()){alert("تحقق من المبلغ والتاريخ.");return;}
+    data.withdrawals.push({id:makeId(),amount,date,note:$("ffWithdrawalNote").value.trim()});
+    if(save()){e.target.reset();$("ffWithdrawalDate").value=today();render();}
+  });
+  setDates();$("ffSaleQty").value=1;
+  if(data.products.length){const p=data.products[0];$("ffSaleUnitPrice").value=p.price;$("ffSaleTotal").value=p.price;}
+  render();
 })();
 </script>
 
