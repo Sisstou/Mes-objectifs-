@@ -385,6 +385,25 @@
     #goalsSection .section-title,#expensesSection .section-title{display:flex}
     @media(max-width:420px){.compact-section>summary{padding:11px 12px;font-size:13px}.balance-panel .balance-number{font-size:18px}}
 
+  
+    /* لوحة تحكم SISSTO */
+    .dashboard-panel{margin:16px 0 18px;padding:20px;border-radius:20px;background:linear-gradient(135deg,#14243a,#203b58);color:#fff;box-shadow:0 10px 28px rgba(15,23,42,.12)}
+    .dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .dashboard-heading h2{font-size:23px;margin:5px 0}
+    .dashboard-heading p{font-size:12px;color:#cbd5e1}
+    .dashboard-kicker{font-size:9px;letter-spacing:1.5px;color:#93c5fd}
+    .dashboard-mark{font-size:30px;color:#93c5fd}
+    .dashboard-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+    .dashboard-stat{min-width:0;padding:13px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(255,255,255,.08)}
+    .dashboard-stat.primary{background:rgba(13,148,136,.23);border-color:rgba(94,234,212,.3)}
+    .dashboard-stat span{display:block;color:#dbeafe;font-size:11px}
+    .dashboard-stat strong{display:block;margin:7px 0 3px;font-size:19px;overflow-wrap:anywhere}
+    .dashboard-stat small{display:block;color:#cbd5e1;font-size:10px;line-height:1.5}
+    .dashboard-shortcuts{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+    .dashboard-shortcuts button{border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:8px 11px;background:rgba(255,255,255,.1);color:#fff;font-size:11px;cursor:pointer}
+    .dashboard-shortcuts button:focus-visible{outline:2px solid #5eead4;outline-offset:2px}
+    @media(max-width:600px){.dashboard-panel{padding:15px;border-radius:16px;margin-top:12px}.dashboard-heading h2{font-size:20px}.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.dashboard-stat{padding:10px}.dashboard-stat strong{font-size:17px}.dashboard-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-shortcuts button{min-height:38px}}
+
   </style>
 </head>
 
@@ -398,6 +417,29 @@
   </header>
 
   <main class="container">
+
+    <section class="dashboard-panel" aria-label="لوحة التحكم">
+      <div class="dashboard-heading">
+        <div><span class="dashboard-kicker">SISSTO · PERSONAL DASHBOARD</span><h2>لوحة التحكم</h2><p id="dashboardDate">نظرة شاملة على مالك ومهامك</p></div>
+        <span class="dashboard-mark">✦</span>
+      </div>
+      <div class="dashboard-stats">
+        <article class="dashboard-stat primary"><span>💼 الرصيد الحالي</span><strong id="dashBalance">—</strong><small>الرصيد بعد المصاريف المسجلة</small></article>
+        <article class="dashboard-stat"><span>💸 مصاريف هذا الشهر</span><strong id="dashMonthExpenses">—</strong><small>حسب سجل المصاريف</small></article>
+        <article class="dashboard-stat"><span>🏦 المدخرات</span><strong id="dashSavings">—</strong><small>المدخرات اليدوية وأهداف الادخار</small></article>
+        <article class="dashboard-stat"><span>💳 الديون المتبقية</span><strong id="dashDebts">—</strong><small>إجمالي الديون المسجلة</small></article>
+        <article class="dashboard-stat"><span>🎯 الأهداف</span><strong id="dashGoals">—</strong><small>الأهداف المسجلة</small></article>
+        <article class="dashboard-stat"><span>✅ مهام اليوم</span><strong id="dashTasks">—</strong><small id="dashTasksNote">المهام المنجزة من الإجمالي</small></article>
+      </div>
+      <div class="dashboard-shortcuts" aria-label="الوصول السريع">
+        <button type="button" data-open-section="tomorrowSection">✅ المهام</button>
+        <button type="button" data-open-section="goalsSection">🎯 الأهداف</button>
+        <button type="button" data-open-section="monthlyBudgetSection">📊 الميزانية</button>
+        <button type="button" data-open-section="expensesSection">＋ تسجيل مصروف</button>
+        <button type="button" data-open-section="calendarSection">📅 التقويم</button>
+      </div>
+    </section>
+
 
     <!-- الرصيد -->
     <details class="compact-section section balance-panel" id="balanceSection">
@@ -465,7 +507,7 @@
       <summary>🎯 أهدافي <span id="goalCount">0</span></summary>
       <div class="compact-content">
       <div class="section-title">
-        <h2>🎯 أهدافي <span id="goalCount">0</span></h2>
+        <h2>🎯 أهدافي</h2>
         <button class="button" id="addGoalButton" type="button">+ هدف</button>
       </div>
       <form id="goalForm" class="goal-form" hidden novalidate>
@@ -703,6 +745,7 @@
       card.append(details, amount);
       elements.history.append(card);
     });
+    updateDashboard();
 
   }
 
@@ -991,6 +1034,38 @@
     byId("savingsBreakdown").textContent = "الأهداف: " + money(goalSavings) + " · اليدوية: " + money(financeExtra.manualSavings);
     byId("debtTotal").textContent = money(financeExtra.debts);
   }
+
+  function updateDashboard() {
+    const monthKey = today().slice(0, 7);
+    const monthExpenses = state.expenses
+      .filter(item => typeof item.date === "string" && item.date.slice(0, 7) === monthKey)
+      .reduce((sum, item) => sum + item.amount, 0);
+    const goalSavings = goals.reduce((sum, g) => sum + (g.type === "money" ? Math.max(0, Number(g.current) || 0) : 0), 0);
+    const tasksToday = Array.isArray(plannerData[today()]) ? plannerData[today()] : [];
+    const completedToday = tasksToday.filter(task => task && task.done).length;
+    byId("dashboardDate").textContent = new Date().toLocaleDateString("ar-DZ", {weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    byId("dashBalance").textContent = money(balance());
+    byId("dashMonthExpenses").textContent = money(monthExpenses);
+    byId("dashSavings").textContent = money(goalSavings + financeExtra.manualSavings);
+    byId("dashDebts").textContent = money(financeExtra.debts);
+    byId("dashGoals").textContent = String(goals.length);
+    byId("dashTasks").textContent = completedToday + " / " + tasksToday.length;
+    byId("dashTasksNote").textContent = tasksToday.length ? "المهام المنجزة من إجمالي مهام اليوم" : "لا توجد مهام مسجلة لهذا اليوم";
+  }
+
+  document.querySelectorAll("[data-open-section]").forEach(button => {
+    button.addEventListener("click", () => {
+      const section = byId(button.dataset.openSection);
+      if (!section) return;
+      section.open = true;
+      section.scrollIntoView({behavior:"smooth",block:"start"});
+      if (button.dataset.openSection === "expensesSection") {
+        elements.form.hidden = false;
+        elements.toggle.setAttribute("aria-expanded","true");
+        elements.title.focus({preventScroll:true});
+      }
+    });
+  });
   byId("editManualSavings").addEventListener("click", () => {
     const value = prompt("أدخل قيمة المدخرات اليدوية بالدينار (دج):", String(financeExtra.manualSavings));
     if (value === null) return;
