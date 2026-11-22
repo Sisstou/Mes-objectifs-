@@ -509,6 +509,7 @@
         <button type="button" data-open-section="financialReportSection">📈 التقرير المالي</button>
         <button type="button" data-open-section="expensesSection">＋ تسجيل مصروف</button>
         <button type="button" data-open-section="calendarSection">📅 التقويم</button>
+        <button type="button" data-open-section="fastFoodSection">🍔 تكلفة منتجات المحل</button>
       </div>
     </section>
 
@@ -755,7 +756,7 @@
           <div class="ff-stat"><span>الربح الصافي التقديري</span><strong id="ffNet">0 دج</strong></div>
         </div>
 
-        <details class="compact-section">
+        <details class="compact-section" id="ffProductsSection">
           <summary>📋 المنتجات وتكلفة التحضير</summary>
           <div class="compact-content">
             <p class="ff-note">أدخل تكلفة تحضير الوحدة الواحدة بعد حساب مكونات الوصفة. لا نضع أسعاراً افتراضية.</p>
@@ -1451,6 +1452,10 @@
       const section = byId(button.dataset.openSection);
       if (!section) return;
       section.open = true;
+      if (button.dataset.openSection === "fastFoodSection") {
+        const productsSection = byId("ffProductsSection");
+        if (productsSection) productsSection.open = true;
+      }
       section.scrollIntoView({behavior:"smooth",block:"start"});
       if (button.dataset.openSection === "expensesSection") {
         elements.form.hidden = false;
