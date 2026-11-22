@@ -175,6 +175,36 @@
       font-size: 13px;
     }
 
+
+    .expense-form {
+      background: white;
+      padding: 18px;
+      border-radius: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .expense-form[hidden], .empty-state[hidden] { display: none; }
+    .form-field { margin-bottom: 13px; }
+    .form-field label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: bold; }
+    .form-field input {
+      display: block; width: 100%; min-height: 44px; padding: 10px 12px;
+      border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px;
+      background: #fff; color: #1f2937; text-align: right;
+    }
+    .form-field input:focus { outline: 2px solid #16a34a; border-color: #16a34a; }
+    .form-error { color: #b91c1c; font-size: 14px; margin: 4px 0 12px; }
+    .empty-state { color: #64748b; text-align: center; padding: 18px; }
+    .expense-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .expense-details { min-width: 0; }
+    .expense-details strong { display: block; overflow-wrap: anywhere; }
+    .expense-meta { color: #64748b; font-size: 12px; margin-top: 5px; }
+    .expense-amount { color: #b91c1c; white-space: nowrap; font-weight: bold; }
+    .delete-expense {
+      margin-top: 8px; border: 1px solid #fecaca; color: #b91c1c; background: #fff;
+      border-radius: 8px; padding: 6px 10px; cursor: pointer;
+    }
+    .button:focus-visible, .delete-expense:focus-visible { outline: 3px solid #86efac; outline-offset: 2px; }
+
     @media (max-width: 600px) {
       .cards {
         grid-template-columns: 1fr 1fr;
@@ -201,7 +231,7 @@
     <!-- الرصيد -->
     <section class="balance">
       <div class="balance-title">الرصيد الحالي</div>
-      <div class="balance-number">73,500 دج</div>
+      <div class="balance-number" id="currentBalance">73,500 دج</div>
     </section>
 
     <!-- الإحصائيات -->
@@ -210,7 +240,7 @@
       <div class="card">
         <div class="icon">💰</div>
         <h3>مصروف اليوم</h3>
-        <div class="amount">1,250 دج</div>
+        <div class="amount" id="todayExpenses">1,250 دج</div>
       </div>
 
       <div class="card">
@@ -324,28 +354,35 @@
     </section>
 
     <!-- المصاريف -->
-    <section class="section">
-
+    <section class="section" id="expensesSection">
       <div class="section-title">
-        <h2>💸 آخر المصاريف</h2>
-        <button class="button">+ مصروف</button>
+        <h2>💸 سجل المصاريف</h2>
+        <button class="button" id="toggleExpenseForm" type="button" aria-expanded="false">+ مصروف</button>
       </div>
 
-      <div class="goal">
-        🚕 نقل
-        <strong style="float:left;">500 دج</strong>
-      </div>
+      <form id="expenseForm" class="expense-form" hidden novalidate>
+        <div class="form-field">
+          <label for="expenseTitle">وصف المصروف</label>
+          <input id="expenseTitle" name="title" type="text" maxlength="60" placeholder="مثال: نقل، أكل، مشتريات" required>
+        </div>
+        <div class="form-field">
+          <label for="expenseAmount">المبلغ (دج)</label>
+          <input id="expenseAmount" name="amount" type="number" min="1" max="100000000" step="0.01" inputmode="decimal" placeholder="0" required>
+        </div>
+        <div class="form-field">
+          <label for="expenseDate">التاريخ</label>
+          <input id="expenseDate" name="date" type="date" required>
+        </div>
+        <div class="form-field">
+          <label for="expenseNote">ملاحظة (اختياري)</label>
+          <input id="expenseNote" name="note" type="text" maxlength="120" placeholder="تفاصيل إضافية">
+        </div>
+        <p id="expenseError" class="form-error" role="alert" aria-live="polite"></p>
+        <button class="button" type="submit">حفظ المصروف</button>
+      </form>
 
-      <div class="goal">
-        🍔 أكل
-        <strong style="float:left;">700 دج</strong>
-      </div>
-
-      <div class="goal">
-        🛒 مشتريات
-        <strong style="float:left;">50 دج</strong>
-      </div>
-
+      <div id="expenseHistory" aria-live="polite"></div>
+      <p id="emptyExpenses" class="empty-state" hidden>لا توجد مصاريف مسجلة.</p>
     </section>
 
   </main>
@@ -353,6 +390,200 @@
   <footer class="footer">
     SISSTO © 2026
   </footer>
+
+
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "sissto_personal_finance_v1";
+  const INITIAL_BALANCE = 74750;
+  const today = () => {
+    const d = new Date();
+    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+  };
+  const initialExpenses = [
+    { id: "legacy-transport", title: "🚕 نقل", amount: 500, date: today(), note: "مصروف سابق" },
+    { id: "legacy-food", title: "🍔 أكل", amount: 700, date: today(), note: "مصروف سابق" },
+    { id: "legacy-shopping", title: "🛒 مشتريات", amount: 50, date: today(), note: "مصروف سابق" }
+  ];
+  const taskInputs = Array.from(document.querySelectorAll(".tomorrow .task input[type='checkbox']"));
+  const elements = {
+    balance: document.getElementById("currentBalance"),
+    today: document.getElementById("todayExpenses"),
+    form: document.getElementById("expenseForm"),
+    toggle: document.getElementById("toggleExpenseForm"),
+    title: document.getElementById("expenseTitle"),
+    amount: document.getElementById("expenseAmount"),
+    date: document.getElementById("expenseDate"),
+    note: document.getElementById("expenseNote"),
+    error: document.getElementById("expenseError"),
+    history: document.getElementById("expenseHistory"),
+    empty: document.getElementById("emptyExpenses")
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { initialBalance: INITIAL_BALANCE, expenses: initialExpenses, tasks: taskInputs.map(() => false) };
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Number.isFinite(parsed.initialBalance) || parsed.initialBalance < 0 ||
+          !Array.isArray(parsed.expenses) || !Array.isArray(parsed.tasks)) throw new Error("Invalid saved data");
+      const expenses = parsed.expenses.filter(item =>
+        item && typeof item.id === "string" && typeof item.title === "string" &&
+        Number.isFinite(item.amount) && item.amount > 0 &&
+        typeof item.date === "string" && !Number.isNaN(Date.parse(item.date))
+      );
+      return {
+        initialBalance: parsed.initialBalance,
+        expenses,
+        tasks: taskInputs.map((_, i) => parsed.tasks[i] === true)
+      };
+    } catch (error) {
+      console.warn("تعذر قراءة البيانات المحفوظة؛ تم تحميل البيانات الافتراضية.", error);
+      return { initialBalance: INITIAL_BALANCE, expenses: initialExpenses, tasks: taskInputs.map(() => false) };
+    }
+  }
+
+  let state = loadState();
+  const money = value => new Intl.NumberFormat("ar-DZ", { maximumFractionDigits: 2 }).format(value) + " دج";
+  const totalExpenses = () => state.expenses.reduce((sum, item) => sum + item.amount, 0);
+  const balance = () => state.initialBalance - totalExpenses();
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (error) {
+      console.error("تعذر حفظ البيانات محلياً.", error);
+      elements.error.textContent = "تعذر حفظ البيانات في المتصفح. تحقق من مساحة التخزين وإعدادات الخصوصية.";
+      return false;
+    }
+  }
+
+  function render() {
+    const current = balance();
+    elements.balance.textContent = money(current);
+    const startOfToday = today();
+    const todaysTotal = state.expenses
+      .filter(item => item.date === startOfToday)
+      .reduce((sum, item) => sum + item.amount, 0);
+    elements.today.textContent = money(todaysTotal);
+    elements.history.replaceChildren();
+
+    const sorted = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
+    elements.empty.hidden = sorted.length !== 0;
+    sorted.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "goal expense-item";
+
+      const details = document.createElement("div");
+      details.className = "expense-details";
+      const title = document.createElement("strong");
+      title.textContent = item.title;
+      const meta = document.createElement("div");
+      meta.className = "expense-meta";
+      meta.textContent = item.date + (item.note ? " · " + item.note : "");
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "delete-expense";
+      remove.textContent = "حذف واسترجاع المبلغ";
+      remove.setAttribute("aria-label", "حذف مصروف " + item.title + " بقيمة " + money(item.amount));
+      remove.addEventListener("click", () => deleteExpense(item.id));
+      details.append(title, meta, remove);
+
+      const amount = document.createElement("strong");
+      amount.className = "expense-amount";
+      amount.textContent = "− " + money(item.amount);
+      card.append(details, amount);
+      elements.history.append(card);
+    });
+    taskInputs.forEach((input, index) => { input.checked = state.tasks[index] === true; });
+  }
+
+  function deleteExpense(id) {
+    const index = state.expenses.findIndex(item => item.id === id);
+    if (index < 0) return;
+    state.expenses.splice(index, 1);
+    saveState();
+    render();
+  }
+
+  elements.toggle.addEventListener("click", () => {
+    elements.form.hidden = !elements.form.hidden;
+    elements.toggle.setAttribute("aria-expanded", String(!elements.form.hidden));
+    if (!elements.form.hidden) {
+      elements.date.value = today();
+      elements.title.focus();
+    }
+  });
+
+  elements.form.addEventListener("submit", event => {
+    event.preventDefault();
+    elements.error.textContent = "";
+
+    const title = elements.title.value.trim();
+    const amountText = elements.amount.value.trim();
+    const amount = Number(amountText);
+    const date = elements.date.value;
+    const note = elements.note.value.trim();
+
+    if (!title || title.length > 60) {
+      elements.error.textContent = "أدخل وصفاً صحيحاً للمصروف (من حرف إلى 60 حرفاً).";
+      elements.title.focus();
+      return;
+    }
+    if (!amountText || !Number.isFinite(amount) || amount <= 0 || amount > 100000000) {
+      elements.error.textContent = "أدخل مبلغاً صحيحاً أكبر من صفر.";
+      elements.amount.focus();
+      return;
+    }
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)) ||
+        new Date(date + "T00:00:00").toISOString().slice(0, 10) !== date || date > today()) {
+      elements.error.textContent = "اختر تاريخاً صحيحاً، ولا يمكن تسجيل تاريخ في المستقبل.";
+      elements.date.focus();
+      return;
+    }
+    if (note.length > 120) {
+      elements.error.textContent = "الملاحظة يجب ألا تتجاوز 120 حرفاً.";
+      elements.note.focus();
+      return;
+    }
+    if (amount > balance()) {
+      elements.error.textContent = "المبلغ أكبر من الرصيد المتاح (" + money(Math.max(0, balance())) + ").";
+      elements.amount.focus();
+      return;
+    }
+
+    state.expenses.push({
+      id: (window.crypto && typeof window.crypto.randomUUID === "function")
+        ? window.crypto.randomUUID()
+        : "expense-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+      title, amount: Math.round(amount * 100) / 100, date, note
+    });
+    if (!saveState()) {
+      state.expenses.pop();
+      return;
+    }
+    elements.form.reset();
+    elements.date.value = today();
+    elements.form.hidden = true;
+    elements.toggle.setAttribute("aria-expanded", "false");
+    render();
+  });
+
+  taskInputs.forEach((input, index) => {
+    input.addEventListener("change", () => {
+      state.tasks[index] = input.checked;
+      saveState();
+    });
+  });
+
+  elements.date.max = today();
+  render();
+  saveState();
+})();
+</script>
 
 </body>
 </html>
