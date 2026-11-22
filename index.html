@@ -531,7 +531,7 @@
     byId("budgetSpending").textContent = fmt(spending);
     byId("budgetReserve").textContent = fmt(reserve);
     byId("budgetDaily").textContent = fmt(spending / 30) + " / يوم";
-    byId("phoneRemaining").textContent = fmt(38000) + " متبقية";
+    byId("phoneRemaining").textContent = fmt(financeExtra.phoneRemaining) + " متبقية";
   }
 
   function render() {
@@ -690,11 +690,45 @@
       const saved = JSON.parse(localStorage.getItem(FINANCE_EXTRA_KEY) || "{}");
       return {
         manualSavings: Number.isFinite(saved.manualSavings) && saved.manualSavings >= 0 ? saved.manualSavings : 0,
-        debts: Number.isFinite(saved.debts) && saved.debts >= 0 ? saved.debts : 0
+        debts: Number.isFinite(saved.debts) && saved.debts >= 0 ? saved.debts : 0,
+        phoneRemaining: Number.isFinite(saved.phoneRemaining) && saved.phoneRemaining >= 0 ? saved.phoneRemaining : 38000,
+        processedMonths: Array.isArray(saved.processedMonths) ? saved.processedMonths.filter(x => /^\\d{4}-\\d{2}$/.test(x)) : []
       };
-    } catch (_) { return { manualSavings: 0, debts: 0 }; }
+    } catch (_) { return { manualSavings: 0, debts: 0, phoneRemaining: 38000, processedMonths: [] }; }
   }
   let financeExtra = loadFinanceExtra();
+
+  // ترحيل الرصيد وتطبيق راتب والتزامات كل شهر مرة واحدة فقط
+  function applyMonthlyLedger() {
+    const monthKey = today().slice(0, 7);
+    if (financeExtra.processedMonths.includes(monthKey)) return;
+    const phonePayment = Math.min(5000, financeExtra.phoneRemaining);
+    const monthlyCharges = [
+      ["قسط عدل", 12000],
+      ["قسط الهاتف", phonePayment],
+      ["الكهرباء والغاز والماء", 4000],
+      ["الدواء والطبيب", 4000],
+      ["النقل", 2000],
+      ["تحويل إلى الادخار", 10000]
+    ].filter(item => item[1] > 0);
+    const firstDay = monthKey + "-01";
+    state.initialBalance += 73000;
+    monthlyCharges.forEach(([title, amount]) => {
+      state.expenses.push({
+        id: "monthly-" + monthKey + "-" + title,
+        title: "📌 " + title,
+        amount,
+        date: firstDay,
+        note: "اقتطاع شهري تلقائي"
+      });
+    });
+    financeExtra.manualSavings += 10000;
+    financeExtra.phoneRemaining = Math.max(0, financeExtra.phoneRemaining - phonePayment);
+    financeExtra.processedMonths.push(monthKey);
+    saveState();
+    saveFinanceExtra();
+  }
+
   function saveFinanceExtra() {
     try { localStorage.setItem(FINANCE_EXTRA_KEY, JSON.stringify(financeExtra)); return true; }
     catch (_) { alert("تعذر حفظ البيانات. تحقق من مساحة التخزين في المتصفح."); return false; }
@@ -853,6 +887,7 @@
   }
   byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
   byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
+  applyMonthlyLedger();
   saveGoals(); renderGoals(); renderCalendar();
 
   elements.date.max = today();
