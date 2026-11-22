@@ -693,9 +693,10 @@
   });
 
 
+  const byId = id => document.getElementById(id);
   // مخطط مهام يومي مستقل لكل تاريخ
   const PLANNER_KEY = "sissto_daily_planner_v2";
-  const plannerDate = datePlusDays(today(),1);
+  const plannerDate = (() => { const d = new Date(); d.setDate(d.getDate()+1); return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-"); })();
   const plannerDefaults = [
     ["صلاة الفجر","عبادة","","الصلاة في وقتها"],["تحضير ملابس العمل","عمل","",""],["تجهيز حقيبة العمل","عمل","",""],
     ["مراجعة مهام الغد","عمل","","راجع الأولويات وما يلزم إنجازه"],["ضبط المنبه","يومي","",""],["زيارة المريض","مواعيد","","أضف الاسم أو العنوان"],
@@ -736,7 +737,6 @@
 
   // نظام الأهداف والتقويم
   const GOALS_KEY = "sissto_goals_v1";
-  const byId = id => document.getElementById(id);
   const datePlusDays = (dateString, days) => {
     const d = new Date(dateString + "T12:00:00");
     d.setDate(d.getDate() + days);
