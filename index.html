@@ -862,6 +862,7 @@
     if(date===today())return "مهام اليوم";
     return "مهام يوم "+date;
   }
+  let dashboardReady = false;
   function renderPlanner(){
     byId("plannerDateLabel").textContent=plannerDateLabel(plannerDate);
     byId("plannerDateInput").value=plannerDate;
@@ -901,6 +902,7 @@
       });list.append(group);
     });
     byId("taskEmpty").hidden=tasks.length!==0;
+    if (dashboardReady) updateDashboard();
   }
   function fillTaskForm(task){
     byId("taskTitle").value=task.title;
@@ -1033,6 +1035,7 @@
     byId("savingsTotal").textContent = money(goalSavings + financeExtra.manualSavings);
     byId("savingsBreakdown").textContent = "الأهداف: " + money(goalSavings) + " · اليدوية: " + money(financeExtra.manualSavings);
     byId("debtTotal").textContent = money(financeExtra.debts);
+    updateDashboard();
   }
 
   function updateDashboard() {
@@ -1219,6 +1222,7 @@
 
   elements.date.max = today();
   renderMonthlyBudget();
+  dashboardReady = true;
   render();
   saveState();
 })();
