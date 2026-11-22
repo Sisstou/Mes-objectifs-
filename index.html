@@ -247,6 +247,50 @@
         font-size: 27px;
       }
     }
+
+    /* واجهة مختصرة ومتجاوبة */
+    body { background:#f1f5f9; }
+    .header { padding:14px 16px; border-radius:0 0 18px 18px; }
+    .header h1 { font-size:23px; }
+    .header p { margin-top:3px; font-size:13px; }
+    .container { max-width:760px; padding:12px; }
+    .balance { margin-top:-3px; padding:16px 18px; border-radius:16px; }
+    .balance-number { font-size:29px; margin-top:4px; }
+    .cards { gap:9px; margin-top:10px; }
+    .card { padding:12px; border-radius:14px; box-shadow:0 2px 9px rgba(0,0,0,.04); }
+    .card .icon { display:none; }
+    .card h3 { margin-top:0; font-size:12px; }
+    .card .amount { font-size:18px; margin-top:4px; }
+    .card .delete-expense { padding:5px 8px; font-size:11px; margin-top:6px; }
+    .section { margin-top:15px; }
+    .section-title { margin-bottom:8px; }
+    .section-title h2 { font-size:16px; }
+    .button { padding:8px 12px; font-size:13px; }
+    .goal, .expense-form, .goal-form, .calendar { padding:13px; border-radius:14px; }
+    .goal { margin-bottom:8px; }
+    .goal-days,.goal-info,.expense-meta { font-size:11px; }
+    .tomorrow { padding:14px; border-radius:14px; }
+    .footer { padding:16px; }
+    .compact-section { margin-top:12px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
+    .compact-section > summary { list-style:none; cursor:pointer; padding:13px 15px; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+    .compact-section > summary::-webkit-details-marker { display:none; }
+    .compact-section > summary::after { content:"＋"; color:#64748b; font-size:18px; }
+    .compact-section[open] > summary::after { content:"−"; }
+    .compact-content { padding:0 12px 12px; }
+    .compact-content .section-title { display:none; }
+    .compact-content .budget-grid { gap:7px; }
+    .compact-content .budget-item { padding:10px; border-radius:10px; }
+    .compact-content .budget-item strong { font-size:15px; }
+    .compact-content .budget-item span { font-size:11px; }
+    .compact-content .budget-note { font-size:10px; }
+    .calendar-day { min-height:40px; }
+    @media(max-width:420px) {
+      .container { padding:9px; }
+      .card { padding:10px; }
+      .card .amount { font-size:16px; }
+      .compact-content .budget-grid { grid-template-columns:1fr 1fr; }
+    }
+
   </style>
 </head>
 
@@ -330,8 +374,9 @@
 
 
     <!-- التقويم -->
-    <section class="section" id="calendarSection">
-      <div class="section-title"><h2>📅 التقويم</h2></div>
+    <details class="compact-section section" id="calendarSection">
+      <summary>📅 التقويم والأحداث</summary>
+      <div class="compact-content">
       <div class="calendar">
         <div class="calendar-head">
           <strong id="calendarMonth"></strong>
@@ -345,12 +390,9 @@
       </div>
     </section>
 \n    <!-- حضّر غدوة -->
-    <section class="section">
-
-      <div class="section-title">
-        <h2>🌙 حضّر غدوة</h2>
-      </div>
-
+    <details class="compact-section section">
+      <summary>🌙 حضّر غدوة — قائمة المهام</summary>
+      <div class="compact-content">
       <div class="tomorrow">
 
         <div class="task">
@@ -382,12 +424,13 @@
         </div>
 
       </div>
-
-    </section>
+      </div>
+    </details>
 
     <!-- الميزانية الشهرية -->
-    <section class="section" id="monthlyBudgetSection">
-      <div class="section-title"><h2>📊 ميزانيتي الشهرية</h2></div>
+    <details class="compact-section section" id="monthlyBudgetSection">
+      <summary>📊 الميزانية الشهرية وتفاصيل الالتزامات</summary>
+      <div class="compact-content">
       <div class="budget-grid">
         <div class="budget-item budget-wide"><span>الدخل الشهري المعتمد</span><strong id="budgetIncome">73,000 دج</strong><div class="budget-note">راتب شهر واحد بعد اعتماد مبلغ 73,000 دج.</div></div>
         <div class="budget-item"><span>قسط عدل — خصم آلي</span><strong id="budgetAdl">12,000 دج</strong></div>
@@ -402,7 +445,8 @@
         <div class="budget-item budget-wide"><span>المصروف اليومي التقريبي</span><strong id="budgetDaily">720 دج / يوم</strong><div class="budget-note">على أساس 30 يوماً، ويُحسب من مخصص المصروفات البالغ 21,600 دج.</div></div>
         <div class="budget-item budget-wide"><span>متابعة قسط الهاتف</span><strong id="phoneRemaining">38,000 دج متبقية</strong><div class="budget-note">القيمة الإجمالية 50,000 دج، المدفوع حتى الآن 12,000 دج. القسط الشهري 5,000 دج؛ المدة المتبقية 8 أشهر (7 أقساط كاملة وقسط أخير 3,000 دج).</div></div>
       </div>
-    </section>
+      </div>
+    </details>
 
     <!-- المصاريف -->
     <section class="section" id="expensesSection">
@@ -432,8 +476,13 @@
         <button class="button" type="submit">حفظ المصروف</button>
       </form>
 
-      <div id="expenseHistory" aria-live="polite"></div>
-      <p id="emptyExpenses" class="empty-state" hidden>لا توجد مصاريف مسجلة.</p>
+      <details class="compact-section">
+        <summary>عرض سجل المصاريف</summary>
+        <div class="compact-content">
+          <div id="expenseHistory" aria-live="polite"></div>
+          <p id="emptyExpenses" class="empty-state" hidden>لا توجد مصاريف مسجلة.</p>
+        </div>
+      </details>
     </section>
 
   </main>
