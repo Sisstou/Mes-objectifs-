@@ -692,11 +692,20 @@
         manualSavings: Number.isFinite(saved.manualSavings) && saved.manualSavings >= 0 ? saved.manualSavings : 0,
         debts: Number.isFinite(saved.debts) && saved.debts >= 0 ? saved.debts : 0,
         phoneRemaining: Number.isFinite(saved.phoneRemaining) && saved.phoneRemaining >= 0 ? saved.phoneRemaining : 38000,
-        processedMonths: Array.isArray(saved.processedMonths) ? saved.processedMonths.filter(x => typeof x === "string" && x.length === 7 && x[4] === "-") : []
+        processedMonths: Array.isArray(saved.processedMonths) ? saved.processedMonths.filter(x => typeof x === "string" && x.length === 7 && x[4] === "-") : [],
+        oldOpeningBalanceRemoved: saved.oldOpeningBalanceRemoved === true
       };
-    } catch (_) { return { manualSavings: 0, debts: 0, phoneRemaining: 38000, processedMonths: [] }; }
+    } catch (_) { return { manualSavings: 0, debts: 0, phoneRemaining: 38000, processedMonths: [], oldOpeningBalanceRemoved: false }; }
   }
   let financeExtra = loadFinanceExtra();
+
+  // حذف الرصيد الافتتاحي القديم 74,750 دج مرة واحدة حتى لا يُضاف إلى راتب الشهر.
+  if (!financeExtra.oldOpeningBalanceRemoved) {
+    state.initialBalance = Math.max(0, state.initialBalance - INITIAL_BALANCE);
+    financeExtra.oldOpeningBalanceRemoved = true;
+    saveState();
+    saveFinanceExtra();
+  }
 
   // ترحيل الرصيد وتطبيق راتب والتزامات كل شهر مرة واحدة فقط
   function applyMonthlyLedger() {
