@@ -270,13 +270,18 @@
       <div class="card">
         <div class="icon">🏦</div>
         <h3>المدخرات</h3>
-        <div class="amount">420,000 دج</div>
+        <div class="amount" id="savingsTotal">0 دج</div>
+        <div class="expense-meta" id="savingsBreakdown">من الأهداف + المدخرات اليدوية</div>
+        <button class="delete-expense" id="editManualSavings" type="button">تعديل المدخرات اليدوية</button>
       </div>
 
       <div class="card">
         <div class="icon">💳</div>
         <h3>الديون</h3>
-        <div class="amount">185,000 دج</div>
+        <div class="amount" id="debtTotal">0 دج</div>
+        <div class="expense-meta">المبلغ المتبقي من الديون</div>
+        <button class="delete-expense" id="addDebt" type="button">+ تسجيل دين</button>
+        <button class="delete-expense" id="repayDebt" type="button">تسجيل تسديد</button>
       </div>
 
       <div class="card">
@@ -627,6 +632,55 @@
     } catch (_) { return defaultGoals(); }
   }
   let goals = loadGoals();
+
+  // المدخرات اليدوية والديون: تخزين مستقل للحفاظ على بيانات المصاريف والأهداف الحالية
+  const FINANCE_EXTRA_KEY = "sissto_finance_extra_v1";
+  function loadFinanceExtra() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(FINANCE_EXTRA_KEY) || "{}");
+      return {
+        manualSavings: Number.isFinite(saved.manualSavings) && saved.manualSavings >= 0 ? saved.manualSavings : 0,
+        debts: Number.isFinite(saved.debts) && saved.debts >= 0 ? saved.debts : 0
+      };
+    } catch (_) { return { manualSavings: 0, debts: 0 }; }
+  }
+  let financeExtra = loadFinanceExtra();
+  function saveFinanceExtra() {
+    try { localStorage.setItem(FINANCE_EXTRA_KEY, JSON.stringify(financeExtra)); return true; }
+    catch (_) { alert("تعذر حفظ البيانات. تحقق من مساحة التخزين في المتصفح."); return false; }
+  }
+  function updateFinanceCards() {
+    const goalSavings = goals.reduce((sum, g) => sum + (g.type === "money" ? Math.max(0, Number(g.current) || 0) : 0), 0);
+    byId("savingsTotal").textContent = money(goalSavings + financeExtra.manualSavings);
+    byId("savingsBreakdown").textContent = "الأهداف: " + money(goalSavings) + " · اليدوية: " + money(financeExtra.manualSavings);
+    byId("debtTotal").textContent = money(financeExtra.debts);
+  }
+  byId("editManualSavings").addEventListener("click", () => {
+    const value = prompt("أدخل قيمة المدخرات اليدوية بالدينار (دج):", String(financeExtra.manualSavings));
+    if (value === null) return;
+    const amount = Number(value);
+    if (!value.trim() || !Number.isFinite(amount) || amount < 0) { alert("أدخل مبلغاً صحيحاً غير سالب."); return; }
+    financeExtra.manualSavings = Math.round(amount * 100) / 100;
+    if (saveFinanceExtra()) updateFinanceCards();
+  });
+  byId("addDebt").addEventListener("click", () => {
+    const value = prompt("أدخل قيمة الدين الجديد بالدينار (دج):");
+    if (value === null) return;
+    const amount = Number(value);
+    if (!value.trim() || !Number.isFinite(amount) || amount <= 0) { alert("أدخل مبلغاً صحيحاً أكبر من صفر."); return; }
+    financeExtra.debts = Math.round((financeExtra.debts + amount) * 100) / 100;
+    if (saveFinanceExtra()) updateFinanceCards();
+  });
+  byId("repayDebt").addEventListener("click", () => {
+    if (financeExtra.debts <= 0) { alert("لا توجد ديون مسجلة حالياً."); return; }
+    const value = prompt("أدخل المبلغ الذي تم تسديده بالدينار (دج):", String(financeExtra.debts));
+    if (value === null) return;
+    const amount = Number(value);
+    if (!value.trim() || !Number.isFinite(amount) || amount <= 0 || amount > financeExtra.debts) { alert("أدخل مبلغاً صحيحاً لا يتجاوز الدين المتبقي (" + money(financeExtra.debts) + ")."); return; }
+    financeExtra.debts = Math.round((financeExtra.debts - amount) * 100) / 100;
+    if (saveFinanceExtra()) updateFinanceCards();
+  });
+
   let editingGoalId = null;
   let calendarCursor = new Date();
   let selectedCalendarDate = today();
@@ -654,6 +708,7 @@
     const list=byId("goalsList"); list.replaceChildren();
     byId("goalCount").textContent="("+goals.length+")";
     byId("goalSummaryCount").textContent=goals.length+" أهداف";
+    updateFinanceCards();
     byId("emptyGoals").hidden=goals.length>0;
     goals.forEach(g=>{
       const card=document.createElement("article"); card.className="goal";
