@@ -404,6 +404,26 @@
     .dashboard-shortcuts button:focus-visible{outline:2px solid #5eead4;outline-offset:2px}
     @media(max-width:600px){.dashboard-panel{padding:15px;border-radius:16px;margin-top:12px}.dashboard-heading h2{font-size:20px}.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.dashboard-stat{padding:10px}.dashboard-stat strong{font-size:17px}.dashboard-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-shortcuts button{min-height:38px}}
 
+  
+    .report-filter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .report-filter label{font-size:13px;font-weight:700}
+    .report-filter input{padding:9px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font:inherit;max-width:170px}
+    .report-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .report-cards article{padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;min-width:0}
+    .report-cards span{display:block;font-size:11px;color:#64748b}
+    .report-cards strong{display:block;margin-top:6px;font-size:18px;overflow-wrap:anywhere}
+    .report-budget{margin-top:15px;padding:13px;border-radius:12px;background:#f8fafc}
+    .report-budget-head{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+    .report-track{height:10px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin-top:10px}
+    .report-track i{display:block;height:100%;width:0;background:#0f766e;transition:width .2s}
+    .report-subtitle{font-size:14px;margin:17px 0 8px}
+    .report-category{margin:9px 0}
+    .report-category-head{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+    .report-category-track{height:7px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin-top:5px}
+    .report-category-track i{display:block;height:100%;background:#64748b}
+    .expense-category-select{display:block;width:100%;min-height:44px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#1f2937;font-size:15px}
+    @media(max-width:600px){.report-cards strong{font-size:16px}.report-filter{align-items:flex-start;flex-direction:column}.report-filter input{max-width:none;width:100%}}
+
   </style>
 </head>
 
@@ -435,6 +455,7 @@
         <button type="button" data-open-section="tomorrowSection">✅ المهام</button>
         <button type="button" data-open-section="goalsSection">🎯 الأهداف</button>
         <button type="button" data-open-section="monthlyBudgetSection">📊 الميزانية</button>
+        <button type="button" data-open-section="financialReportSection">📈 التقرير المالي</button>
         <button type="button" data-open-section="expensesSection">＋ تسجيل مصروف</button>
         <button type="button" data-open-section="calendarSection">📅 التقويم</button>
       </div>
@@ -570,6 +591,26 @@
       </div>
     </details>
 
+    <details class="compact-section section" id="financialReportSection">
+      <summary>📈 التقرير المالي وتحليل المصاريف</summary>
+      <div class="compact-content">
+        <div class="report-filter">
+          <label for="reportMonth">الشهر محل التحليل</label>
+          <input id="reportMonth" type="month">
+        </div>
+        <div class="report-cards">
+          <article><span>إجمالي المصاريف المسجلة</span><strong id="reportTotal">—</strong></article>
+          <article><span>الاقتطاعات الآلية</span><strong id="reportFixed">—</strong></article>
+          <article><span>المصاريف اليومية/المتغيرة</span><strong id="reportVariable">—</strong></article>
+          <article><span>المتبقي من مخصص المصروفات</span><strong id="reportRemaining">—</strong></article>
+        </div>
+        <div class="report-budget"><div class="report-budget-head"><strong>مقارنة المصروفات المتغيرة بالمخصص الشهري</strong><span id="reportBudgetLabel">21,600 دج</span></div><div class="report-track"><i id="reportBudgetBar"></i></div><p id="reportBudgetNote" class="budget-note">الاقتطاعات الآلية والادخار لا تدخل في هذه المقارنة.</p></div>
+        <h3 class="report-subtitle">التوزيع حسب التصنيف</h3>
+        <div id="reportCategories" class="report-categories"></div>
+        <p class="budget-note">التقرير للمتابعة فقط؛ لا يضيف دخلاً ولا يخصم أي مبلغ من الرصيد.</p>
+      </div>
+    </details>
+
     <!-- المصاريف -->
     <details class="compact-section section" id="expensesSection">
       <summary>💸 سجل المصاريف</summary>
@@ -587,6 +628,18 @@
         <div class="form-field">
           <label for="expenseAmount">المبلغ (دج)</label>
           <input id="expenseAmount" name="amount" type="number" min="1" max="100000000" step="0.01" inputmode="decimal" placeholder="0" required>
+        </div>
+        <div class="form-field">
+          <label for="expenseCategory">تصنيف المصروف</label>
+          <select id="expenseCategory" name="category" class="expense-category-select">
+            <option value="منزل وفواتير">منزل وفواتير</option>
+            <option value="غذاء ومشتريات">غذاء ومشتريات</option>
+            <option value="نقل">نقل</option>
+            <option value="صحة">صحة</option>
+            <option value="شخصي">شخصي</option>
+            <option value="عمل">عمل</option>
+            <option value="أخرى">أخرى</option>
+          </select>
         </div>
         <div class="form-field">
           <label for="expenseDate">التاريخ</label>
@@ -642,6 +695,7 @@
     amount: document.getElementById("expenseAmount"),
     date: document.getElementById("expenseDate"),
     note: document.getElementById("expenseNote"),
+    category: document.getElementById("expenseCategory"),
     error: document.getElementById("expenseError"),
     history: document.getElementById("expenseHistory"),
     empty: document.getElementById("emptyExpenses")
@@ -658,7 +712,7 @@
         item && typeof item.id === "string" && typeof item.title === "string" &&
         Number.isFinite(item.amount) && item.amount > 0 &&
         typeof item.date === "string" && !Number.isNaN(Date.parse(item.date))
-      );
+      ).map(item => ({...item, category: typeof item.category === "string" ? item.category : (String(item.title).startsWith("📌 ") ? "التزامات آلية" : "أخرى")}));
       return {
         initialBalance: parsed.initialBalance,
         expenses,
@@ -684,6 +738,43 @@
       elements.error.textContent = "تعذر حفظ البيانات في المتصفح. تحقق من مساحة التخزين وإعدادات الخصوصية.";
       return false;
     }
+  }
+
+  function renderFinancialReport() {
+    const month = byId("reportMonth").value || today().slice(0,7);
+    const entries = state.expenses.filter(item => item.date && item.date.slice(0,7) === month);
+    const fixed = entries.filter(item => String(item.title).startsWith("📌 ") || item.category === "التزامات آلية")
+      .reduce((sum,item)=>sum+item.amount,0);
+    const total = entries.reduce((sum,item)=>sum+item.amount,0);
+    const variable = total - fixed;
+    const spendingPlan = 21600;
+    const remaining = spendingPlan - variable;
+    byId("reportTotal").textContent = money(total);
+    byId("reportFixed").textContent = money(fixed);
+    byId("reportVariable").textContent = money(variable);
+    byId("reportRemaining").textContent = money(remaining);
+    byId("reportBudgetLabel").textContent = money(spendingPlan);
+    const percent = spendingPlan > 0 ? Math.min(100,Math.max(0,variable/spendingPlan*100)) : 0;
+    byId("reportBudgetBar").style.width = percent + "%";
+    byId("reportBudgetBar").style.background = variable > spendingPlan ? "#dc2626" : "#0f766e";
+    byId("reportBudgetNote").textContent = variable > spendingPlan
+      ? "تجاوزت المصاريف المتغيرة المخصص الشهري بمقدار " + money(variable-spendingPlan) + "."
+      : "استهلكت " + percent.toFixed(1) + "% من مخصص المصروفات؛ المتبقي " + money(remaining) + ".";
+    const categories = new Map();
+    entries.filter(item => !(String(item.title).startsWith("📌 ") || item.category === "التزامات آلية"))
+      .forEach(item=>{const name=item.category||"أخرى";categories.set(name,(categories.get(name)||0)+item.amount);});
+    const box=byId("reportCategories");box.replaceChildren();
+    const ranked=[...categories.entries()].sort((a,b)=>b[1]-a[1]);
+    if(!ranked.length){const p=document.createElement("p");p.className="empty-state";p.textContent="لا توجد مصاريف متغيرة مسجلة في هذا الشهر.";box.append(p);}
+    ranked.forEach(([name,value])=>{
+      const row=document.createElement("div");row.className="report-category";
+      const head=document.createElement("div");head.className="report-category-head";
+      const label=document.createElement("strong");label.textContent=name;
+      const amount=document.createElement("span");amount.textContent=money(value);
+      const track=document.createElement("div");track.className="report-category-track";
+      const bar=document.createElement("i");bar.style.width=(variable>0?Math.min(100,value/variable*100):0)+"%";
+      track.append(bar);head.append(label,amount);row.append(head,track);box.append(row);
+    });
   }
 
   // عرض خطة الميزانية الشهرية المعتمدة دون خصمها مرة ثانية من سجل الرصيد
@@ -746,6 +837,7 @@
       elements.history.append(card);
     });
     updateDashboard();
+    renderFinancialReport();
 
   }
 
@@ -810,7 +902,8 @@
       id: (window.crypto && typeof window.crypto.randomUUID === "function")
         ? window.crypto.randomUUID()
         : "expense-" + Date.now() + "-" + Math.random().toString(16).slice(2),
-      title, amount: Math.round(amount * 100) / 100, date, note
+      title, amount: Math.round(amount * 100) / 100, date, note,
+      category: elements.category.value || "أخرى"
     });
     if (!saveState()) {
       state.expenses.pop();
@@ -1217,8 +1310,12 @@
   }
   byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
   byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
+  byId("reportMonth").value = today().slice(0,7);
+  byId("reportMonth").max = today().slice(0,7);
+  byId("reportMonth").addEventListener("change", renderFinancialReport);
   applyMonthlyLedger();
   saveGoals(); renderGoals(); renderCalendar();
+  renderFinancialReport();
 
   elements.date.max = today();
   renderMonthlyBudget();
