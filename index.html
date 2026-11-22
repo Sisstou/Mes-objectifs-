@@ -469,7 +469,11 @@
     .ff-note{font-size:11px;color:#64748b;line-height:1.6;margin:7px 0}
     .ff-subhead{font-size:14px;margin:12px 0 6px}
     .ff-danger{color:#b91c1c}.ff-positive{color:#047857}
-    @media(max-width:420px){.ff-form{grid-template-columns:1fr}.ff-field.wide{grid-column:auto}.ff-stats{gap:6px}.ff-stat{padding:10px}.ff-stat strong{font-size:16px}}
+
+    .ff-material-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .ff-material-card{border:1px solid #e2e8f0;border-radius:10px;padding:10px;background:#fff}
+    .ff-material-card strong{font-size:13px}.ff-material-card small{display:block;color:#64748b;font-size:11px;margin-top:4px}
+\n    @media(max-width:420px){.ff-form{grid-template-columns:1fr}.ff-field.wide{grid-column:auto}.ff-stats{gap:6px}.ff-stat{padding:10px}.ff-stat strong{font-size:16px}}
 
   </style>
 </head>
@@ -767,6 +771,31 @@
         </details>
 
         <details class="compact-section">
+          <summary>🧂 المواد الأولية والوصفات والمخزون</summary>
+          <div class="compact-content">
+            <h3 class="ff-subhead">إضافة مادة أولية</h3>
+            <form id="ffMaterialForm" class="ff-form">
+              <div class="ff-field"><label for="ffMaterialName">اسم المادة</label><input id="ffMaterialName" required maxlength="70" placeholder="فرينة، زيت، جبن..."></div>
+              <div class="ff-field"><label for="ffMaterialUnit">وحدة القياس</label><select id="ffMaterialUnit"><option value="كغ">كغ</option><option value="غ">غ</option><option value="لتر">لتر</option><option value="مل">مل</option><option value="حبة">حبة</option><option value="علبة">علبة</option></select></div>
+              <div class="ff-field"><label for="ffMaterialStock">المخزون الحالي بهذه الوحدة</label><input id="ffMaterialStock" type="number" min="0" step="0.001" value="0" required></div>
+              <div class="ff-field"><label for="ffMaterialCost">تكلفة الوحدة (دج)</label><input id="ffMaterialCost" type="number" min="0" step="0.01" value="0" required></div>
+              <button class="button" type="submit">حفظ المادة</button>
+            </form>
+            <h3 class="ff-subhead">ربط المواد بوصفة المنتج</h3>
+            <form id="ffRecipeForm" class="ff-form">
+              <div class="ff-field"><label for="ffRecipeProduct">المنتج</label><select id="ffRecipeProduct" required></select></div>
+              <div class="ff-field"><label for="ffRecipeMaterial">المادة الأولية</label><select id="ffRecipeMaterial" required></select></div>
+              <div class="ff-field"><label for="ffRecipeQty">كمية المادة في وحدة المنتج</label><input id="ffRecipeQty" type="number" min="0.001" step="0.001" required></div>
+              <button class="button" type="submit">إضافة المكوّن للوصفة</button>
+            </form>
+            <div id="ffRecipeList" class="ff-list"></div>
+            <h3 class="ff-subhead">المخزون الحالي</h3>
+            <div id="ffInventory" class="ff-material-grid"></div>
+            <p class="ff-note">عند تسجيل شراء مادة مرتبطة بالمخزون، تُضاف الكمية تلقائياً ويُحدّث متوسط تكلفة الوحدة. وعند تسجيل المبيعات، يُخصم استهلاك الوصفة من المخزون.</p>
+          </div>
+        </details>
+
+        <details class="compact-section">
           <summary>💰 تسجيل المبيعات (تفصيلية أو ملخص يومي)</summary>
           <div class="compact-content">
             <form id="ffSaleForm" class="ff-form">
@@ -794,6 +823,7 @@
               <div class="ff-field"><label for="ffPurchasePaid">المبلغ المدفوع (دج)</label><input id="ffPurchasePaid" type="number" min="0" step="0.01" value="0" required></div>
               <div class="ff-field"><label for="ffPurchaseDate">التاريخ</label><input id="ffPurchaseDate" type="date" required></div>
               <div class="ff-field"><label for="ffPurchaseQty">الكمية (اختياري)</label><input id="ffPurchaseQty" type="number" min="0" step="0.001"></div>
+              <div class="ff-field wide"><label for="ffPurchaseMaterial">ربط الشراء بمادة في المخزون (اختياري)</label><select id="ffPurchaseMaterial"><option value="">بدون ربط بالمخزون</option></select></div>
               <button class="button" type="submit">حفظ المشتريات</button>
             </form>
             <div id="ffPurchases" class="ff-list"></div>
@@ -1623,11 +1653,11 @@
   };
   const money = n => (Number(n)||0).toLocaleString("fr-DZ",{maximumFractionDigits:2}) + " دج";
   const makeId = () => "ff-" + Date.now() + "-" + Math.random().toString(16).slice(2);
-  const defaults = ["البيتزا","الهامبرغر","الدجاج المتبل","الكارانطيطا"].map(name => ({id:makeId(),name,price:0,cost:0,recipe:""}));
+  const defaults = ["البيتزا","الهامبرغر","الدجاج المتبل","الكارانطيطا"].map(name => ({id:makeId(),name,price:0,cost:0,recipe:"",recipeItems:[]}));
   function load() {
     try {
       const v = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (!v || typeof v !== "object") return {products:defaults,sales:[],purchases:[],operating:[],wages:[],withdrawals:[]};
+      if (!v || typeof v !== "object") return {products:defaults,ingredients:[],sales:[],purchases:[],operating:[],wages:[],withdrawals:[]};
       return {
         products:Array.isArray(v.products)?v.products:defaults,
         sales:Array.isArray(v.sales)?v.sales:[],
@@ -1636,7 +1666,7 @@
         wages:Array.isArray(v.wages)?v.wages:[],
         withdrawals:Array.isArray(v.withdrawals)?v.withdrawals:[]
       };
-    } catch (_) { return {products:defaults,sales:[],purchases:[],operating:[],wages:[],withdrawals:[]}; }
+    } catch (_) { return {products:defaults,ingredients:[],sales:[],purchases:[],operating:[],wages:[],withdrawals:[]}; }
   }
   let data = load();
   function save() {
@@ -1695,6 +1725,21 @@
   function setDates(){
     ["ffSaleDate","ffPurchaseDate","ffOperatingDate","ffWageDate","ffWithdrawalDate"].forEach(id=>{$(id).value=today();$(id).max=today();});
   }
+  $("ffMaterialForm").addEventListener("submit",e=>{
+    e.preventDefault();const name=$("ffMaterialName").value.trim(),unit=$("ffMaterialUnit").value,stock=num("ffMaterialStock"),unitCost=num("ffMaterialCost");
+    if(!name||!validAmount(stock,true)||!validAmount(unitCost,true)){alert("تحقق من اسم المادة والكمية والتكلفة.");return;}
+    const existing=data.ingredients.find(m=>m.name.toLowerCase()===name.toLowerCase()&&m.unit===unit);
+    if(existing)Object.assign(existing,{stock,unitCost});else data.ingredients.push({id:makeId(),name,unit,stock,unitCost});
+    if(save()){e.target.reset();$("ffMaterialStock").value=0;$("ffMaterialCost").value=0;render();}
+  });
+  $("ffRecipeForm").addEventListener("submit",e=>{
+    e.preventDefault();const p=data.products.find(x=>x.id===$("ffRecipeProduct").value),m=data.ingredients.find(x=>x.id===$("ffRecipeMaterial").value),qty=num("ffRecipeQty");
+    if(!p||!m||!validAmount(qty)){alert("اختر المنتج والمادة وأدخل كمية صحيحة.");return;}
+    if(!Array.isArray(p.recipeItems))p.recipeItems=[];
+    const existing=p.recipeItems.find(x=>x.ingredientId===m.id);
+    if(existing)existing.qty=qty;else p.recipeItems.push({ingredientId:m.id,qty});
+    if(save()){e.target.reset();render();}
+  });
   $("ffProductForm").addEventListener("submit",e=>{
     e.preventDefault();
     const name=$("ffProductName").value.trim(),price=num("ffProductPrice"),cost=num("ffProductCost"),recipe=$("ffProductRecipe").value.trim();
@@ -1717,14 +1762,19 @@
     e.preventDefault();
     const p=data.products.find(x=>x.id===$("ffSaleProduct").value),qty=num("ffSaleQty"),unit=num("ffSaleUnitPrice"),total=num("ffSaleTotal"),date=$("ffSaleDate").value;
     if(!p||!Number.isInteger(qty)||qty<1||!validAmount(unit,true)||!validAmount(total,true)||!date||date>today()||Math.abs(total-qty*unit)>0.02){alert("تحقق من المنتج والكمية والأسعار والتاريخ. يجب أن يساوي الإجمالي الكمية × سعر الوحدة.");return;}
-    data.sales.push({id:makeId(),mode:$("ffSaleMode").value,productId:p.id,productName:p.name,qty,unitPrice:unit,unitCost:Number(p.cost)||0,total,date,note:$("ffSaleNote").value.trim()});
+    const currentCost=p.recipeItems&&p.recipeItems.length?p.recipeItems.reduce((sum,it)=>{const m=data.ingredients.find(x=>x.id===it.ingredientId);return sum+(m?it.qty*m.unitCost:0);},0):(Number(p.cost)||0);
+    data.sales.push({id:makeId(),mode:$("ffSaleMode").value,productId:p.id,productName:p.name,qty,unitPrice:unit,unitCost:currentCost,total,date,note:$("ffSaleNote").value.trim()});
+    (p.recipeItems||[]).forEach(it=>{const m=data.ingredients.find(x=>x.id===it.ingredientId);if(m)m.stock=Math.round((m.stock-it.qty*qty)*1000)/1000;});
     if(save()){e.target.reset();$("ffSaleQty").value=1;$("ffSaleDate").value=today();render();}
   });
   $("ffPurchaseForm").addEventListener("submit",e=>{
     e.preventDefault();
     const amount=num("ffPurchaseAmount"),paid=num("ffPurchasePaid"),date=$("ffPurchaseDate").value;
     if(!validAmount(amount)||!validAmount(paid,true)||paid>amount||!date||date>today()){alert("تحقق من قيمة الفاتورة والمبلغ المدفوع والتاريخ.");return;}
-    data.purchases.push({id:makeId(),item:$("ffPurchaseItem").value.trim(),supplier:$("ffPurchaseSupplier").value.trim(),amount,paid,qty:num("ffPurchaseQty")||0,date});
+    const material=data.ingredients.find(x=>x.id===$("ffPurchaseMaterial").value),qty=num("ffPurchaseQty")||0;
+    if(material&&qty<=0){alert("أدخل كمية الشراء عند ربط الفاتورة بمادة في المخزون.");return;}
+    if(material){const oldValue=material.stock*material.unitCost;material.stock=Math.round((material.stock+qty)*1000)/1000;material.unitCost=material.stock>0?(oldValue+amount)/material.stock:0;}
+    data.purchases.push({id:makeId(),item:$("ffPurchaseItem").value.trim(),supplier:$("ffPurchaseSupplier").value.trim(),amount,paid,qty,date,materialId:material?.id||null});
     if(save()){e.target.reset();$("ffPurchaseDate").value=today();$("ffPurchasePaid").value=0;render();}
   });
   $("ffOperatingForm").addEventListener("submit",e=>{
