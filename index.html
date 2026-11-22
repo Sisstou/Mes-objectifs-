@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SISSTO | حياتي ومالي</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    .header {
+      background: #111827;
+      color: white;
+      padding: 25px 20px;
+      border-radius: 0 0 25px 25px;
+    }
+
+    .header h1 {
+      font-size: 30px;
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      margin-top: 8px;
+      color: #cbd5e1;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .balance {
+      background: white;
+      margin-top: -10px;
+      padding: 22px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .balance-title {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .balance-number {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .card .icon {
+      font-size: 28px;
+    }
+
+    .card h3 {
+      margin-top: 10px;
+      font-size: 15px;
+      color: #64748b;
+    }
+
+    .card .amount {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .section {
+      margin-top: 25px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2 {
+      font-size: 20px;
+    }
+
+    .button {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .goal {
+      background: white;
+      padding: 18px;
+      border-radius: 18px;
+      margin-bottom: 12px;
+    }
+
+    .goal-name {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .progress {
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #16a34a;
+      width: 40%;
+    }
+
+    .goal-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .tomorrow {
+      background: #111827;
+      color: white;
+      padding: 20px;
+      border-radius: 20px;
+    }
+
+    .task {
+      padding: 10px 0;
+      border-bottom: 1px solid #374151;
+    }
+
+    .task:last-child {
+      border-bottom: none;
+    }
+
+    .task input {
+      margin-left: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 30px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .cards {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .balance-number {
+        font-size: 27px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="container">
+      <h1>SISSTO</h1>
+      <p>نظّم حياتك، أهدافك ومالك 💪</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- الرصيد -->
+    <section class="balance">
+      <div class="balance-title">الرصيد الحالي</div>
+      <div class="balance-number">73,500 دج</div>
+    </section>
+
+    <!-- الإحصائيات -->
+    <section class="cards">
+
+      <div class="card">
+        <div class="icon">💰</div>
+        <h3>مصروف اليوم</h3>
+        <div class="amount">1,250 دج</div>
+      </div>
+
+      <div class="card">
+        <div class="icon">🏦</div>
+        <h3>المدخرات</h3>
+        <div class="amount">420,000 دج</div>
+      </div>
+
+      <div class="card">
+        <div class="icon">💳</div>
+        <h3>الديون</h3>
+        <div class="amount">185,000 دج</div>
+      </div>
+
+      <div class="card">
+        <div class="icon">🎯</div>
+        <h3>الأهداف</h3>
+        <div class="amount">3 أهداف</div>
+      </div>
+
+    </section>
+
+    <!-- الأهداف -->
+    <section class="section">
+
+      <div class="section-title">
+        <h2>🎯 أهدافي</h2>
+        <button class="button">+ هدف</button>
+      </div>
+
+      <div class="goal">
+        <div class="goal-name">🏠 بناء المنزل</div>
+
+        <div class="progress">
+          <div class="progress-bar" style="width: 40%;"></div>
+        </div>
+
+        <div class="goal-info">
+          <span>420,000 دج</span>
+          <span>40%</span>
+        </div>
+      </div>
+
+      <div class="goal">
+        <div class="goal-name">⚖️ الوصول إلى 75 كغ</div>
+
+        <div class="progress">
+          <div class="progress-bar" style="width: 55%;"></div>
+        </div>
+
+        <div class="goal-info">
+          <span>84.8 → 75 كغ</span>
+          <span>55%</span>
+        </div>
+      </div>
+
+      <div class="goal">
+        <div class="goal-name">🍕 تطوير SISSTO Fast Food</div>
+
+        <div class="progress">
+          <div class="progress-bar" style="width: 25%;"></div>
+        </div>
+
+        <div class="goal-info">
+          <span>25%</span>
+          <span>قيد الإنجاز</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- حضّر غدوة -->
+    <section class="section">
+
+      <div class="section-title">
+        <h2>🌙 حضّر غدوة</h2>
+      </div>
+
+      <div class="tomorrow">
+
+        <div class="task">
+          <label>
+            <input type="checkbox">
+            تحضير ملابس العمل
+          </label>
+        </div>
+
+        <div class="task">
+          <label>
+            <input type="checkbox">
+            تجهيز حقيبة العمل
+          </label>
+        </div>
+
+        <div class="task">
+          <label>
+            <input type="checkbox">
+            مراجعة مهام الغد
+          </label>
+        </div>
+
+        <div class="task">
+          <label>
+            <input type="checkbox">
+            ضبط المنبه
+          </label>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- المصاريف -->
+    <section class="section">
+
+      <div class="section-title">
+        <h2>💸 آخر المصاريف</h2>
+        <button class="button">+ مصروف</button>
+      </div>
+
+      <div class="goal">
+        🚕 نقل
+        <strong style="float:left;">500 دج</strong>
+      </div>
+
+      <div class="goal">
+        🍔 أكل
+        <strong style="float:left;">700 دج</strong>
+      </div>
+
+      <div class="goal">
+        🛒 مشتريات
+        <strong style="float:left;">50 دج</strong>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    SISSTO © 2026
+  </footer>
+
+</body>
+</html>
