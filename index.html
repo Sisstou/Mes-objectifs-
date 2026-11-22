@@ -692,7 +692,7 @@
         manualSavings: Number.isFinite(saved.manualSavings) && saved.manualSavings >= 0 ? saved.manualSavings : 0,
         debts: Number.isFinite(saved.debts) && saved.debts >= 0 ? saved.debts : 0,
         phoneRemaining: Number.isFinite(saved.phoneRemaining) && saved.phoneRemaining >= 0 ? saved.phoneRemaining : 38000,
-        processedMonths: Array.isArray(saved.processedMonths) ? saved.processedMonths.filter(x => /^\\d{4}-\\d{2}$/.test(x)) : []
+        processedMonths: Array.isArray(saved.processedMonths) ? saved.processedMonths.filter(x => typeof x === "string" && x.length === 7 && x[4] === "-") : []
       };
     } catch (_) { return { manualSavings: 0, debts: 0, phoneRemaining: 38000, processedMonths: [] }; }
   }
