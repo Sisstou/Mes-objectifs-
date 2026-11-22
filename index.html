@@ -371,6 +371,20 @@
     @media(min-width:601px){.task-form{grid-template-columns:1.4fr .7fr 1.3fr .9fr}.task-form textarea{grid-column:1/-1}.task-form button{grid-column:1/-1}}
     @media(max-width:600px){.task-form{grid-template-columns:1fr 1fr}.task-form input:first-child,.task-form input:nth-child(3),.task-form textarea,.task-form select,.task-form button{grid-column:1/-1}.planner-task{gap:7px;padding:9px}.planner-task-actions{flex-direction:column}.planner-task-title{font-size:13px}.planner-time{font-size:11px;padding:5px 6px}}
 
+
+    /* كل قسم داخل بطاقة مستقلة قابلة للفتح والإغلاق */
+    .compact-section{display:block;margin-top:12px;background:#fff;border:1px solid #dce4ee;border-radius:15px;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.035)}
+    .compact-section>summary{min-height:54px;gap:12px}
+    .compact-section>summary::after{content:"＋";flex:0 0 auto}
+    .compact-section[open]>summary::after{content:"−"}
+    .compact-section>.compact-content{padding:0 13px 13px}
+    .balance-panel>summary{align-items:center}
+    .balance-panel .balance-number{font-size:clamp(19px,4vw,25px);margin:0;white-space:nowrap}
+    #overviewSection .cards{margin-top:0}
+    #goalsSection>.compact-content,#expensesSection>.compact-content{padding-top:4px}
+    #goalsSection .section-title,#expensesSection .section-title{display:flex}
+    @media(max-width:420px){.compact-section>summary{padding:11px 12px;font-size:13px}.balance-panel .balance-number{font-size:18px}}
+
   </style>
 </head>
 
@@ -386,13 +400,16 @@
   <main class="container">
 
     <!-- الرصيد -->
-    <section class="balance">
-      <div class="balance-title">الرصيد الحالي</div>
-      <div class="balance-number" id="currentBalance">73,500 دج</div>
-    </section>
+    <details class="compact-section section balance-panel" id="balanceSection">
+      <summary><span>💼 الرصيد الحالي</span><strong class="balance-number" id="currentBalance">73,500 دج</strong></summary>
+      <div class="compact-content"><p class="budget-note">الرصيد المتاح بعد تسجيل المصاريف والالتزامات.</p></div>
+    </details>
 
     <!-- الإحصائيات -->
-    <section class="cards">
+    <details class="compact-section section" id="overviewSection">
+      <summary>📌 ملخص الحساب: المصروفات والمدخرات والديون والأهداف</summary>
+      <div class="compact-content">
+      <section class="cards">
 
       <div class="card">
         <div class="icon">💰</div>
@@ -423,7 +440,9 @@
         <div class="amount" id="goalSummaryCount">3 أهداف</div>
       </div>
 
-    </section>
+      </section>
+      </div>
+    </details>
 
     <details class="compact-section section" id="tomorrowSection" open>
       <summary>🌙 مهامي ومواعيدي <span id="taskProgress" style="color:#16a34a;font-size:12px"></span></summary>
@@ -442,8 +461,9 @@
     </details>
 
     <!-- الأهداف -->
-    <section class="section">
-
+    <details class="compact-section section" id="goalsSection">
+      <summary>🎯 أهدافي <span id="goalCount">0</span></summary>
+      <div class="compact-content">
       <div class="section-title">
         <h2>🎯 أهدافي <span id="goalCount">0</span></h2>
         <button class="button" id="addGoalButton" type="button">+ هدف</button>
@@ -465,8 +485,8 @@
       </form>
       <div id="goalsList" aria-live="polite"></div>
       <p id="emptyGoals" class="empty-state" hidden>لا توجد أهداف بعد. أضف هدفك الأول.</p>
-
-    </section>
+      </div>
+    </details>
 
 
     <!-- التقويم -->
@@ -509,7 +529,9 @@
     </details>
 
     <!-- المصاريف -->
-    <section class="section" id="expensesSection">
+    <details class="compact-section section" id="expensesSection">
+      <summary>💸 سجل المصاريف</summary>
+      <div class="compact-content">
       <div class="section-title">
         <h2>💸 سجل المصاريف</h2>
         <button class="button" id="toggleExpenseForm" type="button" aria-expanded="false">+ مصروف</button>
@@ -543,7 +565,8 @@
           <p id="emptyExpenses" class="empty-state" hidden>لا توجد مصاريف مسجلة.</p>
         </div>
       </details>
-    </section>
+      </div>
+    </details>
 
   </main>
 
