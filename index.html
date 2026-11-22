@@ -1657,7 +1657,7 @@
     const ops=data.operating.filter(x=>x.date&&x.date.slice(0,7)===month);
     const wages=data.wages.filter(x=>x.date&&x.date.slice(0,7)===month);
     const revenue=sales.reduce((a,x)=>a+x.total,0);
-    const cogs=sales.reduce((a,x)=>a+(Number(data.products.find(p=>p.id===x.productId)?.cost)||0)*x.qty,0);
+    const cogs=sales.reduce((a,x)=>a+(Number.isFinite(x.unitCost)?x.unitCost:(Number(data.products.find(p=>p.id===x.productId)?.cost)||0))*x.qty,0);
     const operating=ops.reduce((a,x)=>a+x.amount,0)+wages.reduce((a,x)=>a+x.amount,0);
     $("ffRevenue").textContent=money(revenue);
     $("ffCogs").textContent=money(cogs);
@@ -1717,7 +1717,7 @@
     e.preventDefault();
     const p=data.products.find(x=>x.id===$("ffSaleProduct").value),qty=num("ffSaleQty"),unit=num("ffSaleUnitPrice"),total=num("ffSaleTotal"),date=$("ffSaleDate").value;
     if(!p||!Number.isInteger(qty)||qty<1||!validAmount(unit,true)||!validAmount(total,true)||!date||date>today()||Math.abs(total-qty*unit)>0.02){alert("تحقق من المنتج والكمية والأسعار والتاريخ. يجب أن يساوي الإجمالي الكمية × سعر الوحدة.");return;}
-    data.sales.push({id:makeId(),mode:$("ffSaleMode").value,productId:p.id,productName:p.name,qty,unitPrice:unit,total,date,note:$("ffSaleNote").value.trim()});
+    data.sales.push({id:makeId(),mode:$("ffSaleMode").value,productId:p.id,productName:p.name,qty,unitPrice:unit,unitCost:Number(p.cost)||0,total,date,note:$("ffSaleNote").value.trim()});
     if(save()){e.target.reset();$("ffSaleQty").value=1;$("ffSaleDate").value=today();render();}
   });
   $("ffPurchaseForm").addEventListener("submit",e=>{
