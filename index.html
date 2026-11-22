@@ -282,7 +282,7 @@
       <div class="card">
         <div class="icon">🎯</div>
         <h3>الأهداف</h3>
-        <div class="amount">3 أهداف</div>
+        <div class="amount" id="goalSummaryCount">3 أهداف</div>
       </div>
 
     </section>
@@ -653,6 +653,7 @@
   function renderGoals() {
     const list=byId("goalsList"); list.replaceChildren();
     byId("goalCount").textContent="("+goals.length+")";
+    byId("goalSummaryCount").textContent=goals.length+" أهداف";
     byId("emptyGoals").hidden=goals.length>0;
     goals.forEach(g=>{
       const card=document.createElement("article"); card.className="goal";
@@ -733,16 +734,17 @@
       if(date===today())button.classList.add("today");
       if(date===selectedCalendarDate)button.classList.add("selected");
       button.textContent=String(dateObj.getDate());
-      const hasEvent=goals.some(g=>g.start===date||g.end===date);
+      const hasEvent=goals.some(g=>date>=g.start&&date<=g.end);
       if(hasEvent){const dot=document.createElement("span");dot.className="calendar-dot";dot.setAttribute("aria-hidden","true");button.append(dot);}
       button.addEventListener("click",()=>{selectedCalendarDate=date;renderCalendar();});
       grid.append(button);
     }
-    const matches=goals.filter(g=>g.start===selectedCalendarDate||g.end===selectedCalendarDate);
+    const matches=goals.filter(g=>selectedCalendarDate>=g.start&&selectedCalendarDate<=g.end);
     const eventBox=byId("calendarEvents"); eventBox.replaceChildren();
     const heading=document.createElement("strong"); heading.textContent="مواعيد "+selectedCalendarDate; eventBox.append(heading);
-    if(!matches.length){const p=document.createElement("p");p.textContent="لا توجد بداية أو نهاية هدف في هذا اليوم.";eventBox.append(p);}
-    matches.forEach(g=>{const p=document.createElement("p");p.textContent=(g.start===selectedCalendarDate?"بداية: ":"نهاية: ")+g.name;eventBox.append(p);});
+    if(!matches.length){const p=document.createElement("p");p.textContent="لا توجد أهداف نشطة في هذا اليوم.";eventBox.append(p);}
+    matches.forEach(g=>{const p=document.createElement("p");const phase=g.start===selectedCalendarDate?"بداية الهدف: ":g.end===selectedCalendarDate?"نهاية الهدف: ":"هدف مستمر: ";p.textContent=phase+g.name;eventBox.append(p);});
+    if(selectedCalendarDate===datePlusDays(today(),1)){const h=document.createElement("strong");h.textContent=" · مهام الغد";eventBox.append(h);taskInputs.forEach(input=>{const p=document.createElement("p");p.textContent=(input.checked?"✓ ":"○ ")+input.closest("label").textContent.trim();eventBox.append(p);});}
   }
   byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
   byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
