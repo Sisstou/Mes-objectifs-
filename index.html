@@ -205,7 +205,31 @@
     }
     .button:focus-visible, .delete-expense:focus-visible { outline: 3px solid #86efac; outline-offset: 2px; }
 
-    @media (max-width: 600px) {
+
+    .goal-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .goal-actions button, .calendar-nav button { border:0; border-radius:8px; padding:7px 11px; cursor:pointer; }
+    .edit-goal { background:#e0f2fe; color:#075985; }
+    .remove-goal { background:#fee2e2; color:#991b1b; }
+    .goal-form, .calendar { background:#fff; padding:18px; border-radius:18px; margin-bottom:14px; box-shadow:0 4px 15px rgba(0,0,0,.05); }
+    .goal-form[hidden] { display:none; }
+    .goal-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .goal-form input, .goal-form select { width:100%; min-height:43px; padding:9px; border:1px solid #cbd5e1; border-radius:9px; font-size:15px; background:#fff; }
+    .goal-form label { display:block; font-size:13px; font-weight:bold; margin-bottom:5px; }
+    .goal-form .form-field { margin:0 0 11px; }
+    .goal-days { margin-top:9px; font-size:13px; color:#475569; }
+    .calendar-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; }
+    .calendar-nav { display:flex; gap:7px; }
+    .calendar-nav button { background:#e2e8f0; color:#1e293b; font-size:18px; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .calendar-weekday { text-align:center; color:#64748b; font-size:12px; padding:6px 0; }
+    .calendar-day { min-height:55px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; padding:5px; text-align:center; cursor:pointer; position:relative; color:#1f2937; }
+    .calendar-day.muted { opacity:.35; }
+    .calendar-day.today { border:2px solid #16a34a; font-weight:bold; }
+    .calendar-day.selected { background:#dcfce7; border-color:#16a34a; }
+    .calendar-dot { display:block; width:6px; height:6px; border-radius:50%; background:#2563eb; margin:4px auto 0; }
+    .calendar-events { margin-top:14px; padding-top:12px; border-top:1px solid #e2e8f0; color:#475569; font-size:14px; }
+    @media(max-width:600px) { .goal-form-grid {grid-template-columns:1fr;} .calendar-day {min-height:46px;font-size:13px;padding:4px 1px;} }
+\n    @media (max-width: 600px) {
       .cards {
         grid-template-columns: 1fr 1fr;
       }
@@ -267,52 +291,46 @@
     <section class="section">
 
       <div class="section-title">
-        <h2>🎯 أهدافي</h2>
-        <button class="button">+ هدف</button>
+        <h2>🎯 أهدافي <span id="goalCount">0</span></h2>
+        <button class="button" id="addGoalButton" type="button">+ هدف</button>
       </div>
-
-      <div class="goal">
-        <div class="goal-name">🏠 بناء المنزل</div>
-
-        <div class="progress">
-          <div class="progress-bar" style="width: 40%;"></div>
+      <form id="goalForm" class="goal-form" hidden novalidate>
+        <h3 id="goalFormHeading" style="margin-bottom:14px;">إضافة هدف جديد</h3>
+        <div class="goal-form-grid">
+          <div class="form-field"><label for="goalName">اسم الهدف</label><input id="goalName" maxlength="70" required placeholder="مثال: تطوير المشروع"></div>
+          <div class="form-field"><label for="goalType">نوع الهدف</label><select id="goalType"><option value="money">هدف مالي</option><option value="progress">هدف بنسبة إنجاز</option></select></div>
+          <div class="form-field" id="goalTargetWrap"><label for="goalTarget">المبلغ المستهدف (دج)</label><input id="goalTarget" type="number" min="1" step="0.01" placeholder="0"></div>
+          <div class="form-field" id="goalCurrentWrap"><label for="goalCurrent">المبلغ المحقق (دج)</label><input id="goalCurrent" type="number" min="0" step="0.01" placeholder="0"></div>
+          <div class="form-field" id="goalProgressWrap"><label for="goalProgress">نسبة الإنجاز (%)</label><input id="goalProgress" type="number" min="0" max="100" step="1" value="0"></div>
+          <div class="form-field"><label for="goalStart">تاريخ البداية</label><input id="goalStart" type="date" required></div>
+          <div class="form-field"><label for="goalEnd">تاريخ النهاية</label><input id="goalEnd" type="date" required></div>
         </div>
-
-        <div class="goal-info">
-          <span>420,000 دج</span>
-          <span>40%</span>
-        </div>
-      </div>
-
-      <div class="goal">
-        <div class="goal-name">⚖️ الوصول إلى 75 كغ</div>
-
-        <div class="progress">
-          <div class="progress-bar" style="width: 55%;"></div>
-        </div>
-
-        <div class="goal-info">
-          <span>84.8 → 75 كغ</span>
-          <span>55%</span>
-        </div>
-      </div>
-
-      <div class="goal">
-        <div class="goal-name">🍕 تطوير SISSTO Fast Food</div>
-
-        <div class="progress">
-          <div class="progress-bar" style="width: 25%;"></div>
-        </div>
-
-        <div class="goal-info">
-          <span>25%</span>
-          <span>قيد الإنجاز</span>
-        </div>
-      </div>
+        <p id="goalError" class="form-error" role="alert"></p>
+        <button class="button" type="submit">حفظ الهدف</button>
+        <button class="delete-expense" id="cancelGoal" type="button">إلغاء</button>
+      </form>
+      <div id="goalsList" aria-live="polite"></div>
+      <p id="emptyGoals" class="empty-state" hidden>لا توجد أهداف بعد. أضف هدفك الأول.</p>
 
     </section>
 
-    <!-- حضّر غدوة -->
+
+    <!-- التقويم -->
+    <section class="section" id="calendarSection">
+      <div class="section-title"><h2>📅 التقويم</h2></div>
+      <div class="calendar">
+        <div class="calendar-head">
+          <strong id="calendarMonth"></strong>
+          <div class="calendar-nav">
+            <button type="button" id="prevMonth" aria-label="الشهر السابق">‹</button>
+            <button type="button" id="nextMonth" aria-label="الشهر التالي">›</button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-events" id="calendarEvents" aria-live="polite">اختر يوماً لعرض مواعيد الأهداف.</div>
+      </div>
+    </section>
+\n    <!-- حضّر غدوة -->
     <section class="section">
 
       <div class="section-title">
@@ -582,7 +600,154 @@
     });
   });
 
-  elements.date.max = today();
+
+  // نظام الأهداف والتقويم
+  const GOALS_KEY = "sissto_goals_v1";
+  const byId = id => document.getElementById(id);
+  const datePlusDays = (dateString, days) => {
+    const d = new Date(dateString + "T12:00:00");
+    d.setDate(d.getDate() + days);
+    return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-");
+  };
+  const dateDiff = (from, to) => Math.round((new Date(to+"T12:00:00") - new Date(from+"T12:00:00")) / 86400000);
+  const defaultGoals = () => [
+    {id:"goal-house",name:"🏠 بناء المنزل",type:"money",target:1050000,current:420000,start:today(),end:datePlusDays(today(),365)},
+    {id:"goal-habits",name:"🌱 تحسين العادات اليومية",type:"progress",progress:55,start:today(),end:datePlusDays(today(),90)},
+    {id:"goal-business",name:"🍕 تطوير SISSTO Fast Food",type:"progress",progress:25,start:today(),end:datePlusDays(today(),180)}
+  ];
+  function loadGoals() {
+    try {
+      const raw = localStorage.getItem(GOALS_KEY);
+      if (!raw) return defaultGoals();
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return defaultGoals();
+      return data.filter(g => g && typeof g.id==="string" && typeof g.name==="string" &&
+        ["money","progress"].includes(g.type) && /^\d{4}-\d{2}-\d{2}$/.test(g.start) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(g.end) && g.end>=g.start);
+    } catch (_) { return defaultGoals(); }
+  }
+  let goals = loadGoals();
+  let editingGoalId = null;
+  let calendarCursor = new Date();
+  let selectedCalendarDate = today();
+  const goalForm = byId("goalForm");
+  const goalFields = {
+    name:byId("goalName"), type:byId("goalType"), target:byId("goalTarget"),
+    current:byId("goalCurrent"), progress:byId("goalProgress"),
+    start:byId("goalStart"), end:byId("goalEnd"), error:byId("goalError")
+  };
+  function saveGoals() {
+    try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); return true; }
+    catch (_) { goalFields.error.textContent="تعذر حفظ الأهداف في المتصفح."; return false; }
+  }
+  function goalPercent(g) {
+    if (g.type==="money") return g.target>0 ? Math.min(100,Math.max(0,(g.current/g.target)*100)) : 0;
+    return Math.min(100,Math.max(0,Number(g.progress)||0));
+  }
+  function remainingLabel(g) {
+    const remaining=dateDiff(today(),g.end);
+    if (remaining<0) return "انتهت المدة منذ "+Math.abs(remaining)+" يوم";
+    if (remaining===0) return "آخر يوم اليوم";
+    return "متبقي "+remaining+" يوم";
+  }
+  function renderGoals() {
+    const list=byId("goalsList"); list.replaceChildren();
+    byId("goalCount").textContent="("+goals.length+")";
+    byId("emptyGoals").hidden=goals.length>0;
+    goals.forEach(g=>{
+      const card=document.createElement("article"); card.className="goal";
+      const name=document.createElement("div"); name.className="goal-name"; name.textContent=g.name;
+      const bar=document.createElement("div"); bar.className="progress";
+      const fill=document.createElement("div"); fill.className="progress-bar"; fill.style.width=goalPercent(g)+"%"; bar.append(fill);
+      const info=document.createElement("div"); info.className="goal-info";
+      const amount=document.createElement("span");
+      amount.textContent=g.type==="money" ? money(g.current)+" من "+money(g.target) : "نسبة الإنجاز: "+Math.round(goalPercent(g))+"%";
+      const pct=document.createElement("span"); pct.textContent=Math.round(goalPercent(g))+"%";
+      info.append(amount,pct);
+      const dates=document.createElement("div"); dates.className="goal-days";
+      dates.textContent="البداية: "+g.start+" · النهاية: "+g.end+" · "+remainingLabel(g);
+      const actions=document.createElement("div"); actions.className="goal-actions";
+      const edit=document.createElement("button"); edit.type="button"; edit.className="edit-goal"; edit.textContent="تعديل";
+      edit.addEventListener("click",()=>openGoalForm(g));
+      const remove=document.createElement("button"); remove.type="button"; remove.className="remove-goal"; remove.textContent="حذف";
+      remove.addEventListener("click",()=>{ if(window.confirm("هل تريد حذف الهدف: "+g.name+"؟")) { goals=goals.filter(x=>x.id!==g.id); saveGoals(); renderGoals(); renderCalendar(); } });
+      actions.append(edit,remove); card.append(name,bar,info,dates,actions); list.append(card);
+    });
+  }
+  function updateGoalTypeFields() {
+    const moneyGoal=goalFields.type.value==="money";
+    byId("goalTargetWrap").hidden=!moneyGoal; byId("goalCurrentWrap").hidden=!moneyGoal;
+    byId("goalProgressWrap").hidden=moneyGoal;
+    goalFields.target.required=moneyGoal; goalFields.current.required=moneyGoal; goalFields.progress.required=!moneyGoal;
+  }
+  function openGoalForm(g=null) {
+    editingGoalId=g?g.id:null; goalFields.error.textContent="";
+    byId("goalFormHeading").textContent=g?"تعديل الهدف":"إضافة هدف جديد";
+    goalFields.name.value=g?g.name:""; goalFields.type.value=g?g.type:"money";
+    goalFields.target.value=g&&g.type==="money"?g.target:"";
+    goalFields.current.value=g&&g.type==="money"?g.current:0;
+    goalFields.progress.value=g&&g.type==="progress"?g.progress:0;
+    goalFields.start.value=g?g.start:today(); goalFields.end.value=g?g.end:datePlusDays(today(),30);
+    updateGoalTypeFields(); goalForm.hidden=false; goalForm.scrollIntoView({behavior:"smooth",block:"center"}); goalFields.name.focus();
+  }
+  byId("addGoalButton").addEventListener("click",()=>openGoalForm());
+  byId("cancelGoal").addEventListener("click",()=>{goalForm.hidden=true; editingGoalId=null;});
+  goalFields.type.addEventListener("change",updateGoalTypeFields);
+  goalForm.addEventListener("submit",event=>{
+    event.preventDefault(); goalFields.error.textContent="";
+    const name=goalFields.name.value.trim(), type=goalFields.type.value;
+    const start=goalFields.start.value, end=goalFields.end.value;
+    if(!name){goalFields.error.textContent="أدخل اسم الهدف.";return;}
+    if(!start||!end||end<start){goalFields.error.textContent="تحقق من تاريخ البداية والنهاية.";return;}
+    let data={name,type,start,end};
+    if(type==="money"){
+      const target=Number(goalFields.target.value), current=Number(goalFields.current.value);
+      if(!Number.isFinite(target)||target<=0||!Number.isFinite(current)||current<0){goalFields.error.textContent="أدخل مبلغاً مستهدفاً صحيحاً ومبلغاً محققاً غير سالب.";return;}
+      data.target=target; data.current=current;
+    } else {
+      const progress=Number(goalFields.progress.value);
+      if(!Number.isFinite(progress)||progress<0||progress>100){goalFields.error.textContent="نسبة الإنجاز يجب أن تكون بين 0 و100.";return;}
+      data.progress=progress;
+    }
+    if(editingGoalId){goals=goals.map(g=>g.id===editingGoalId?{...g,...data}:g);}
+    else goals.push({id:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():"goal-"+Date.now()+"-"+Math.random().toString(16).slice(2),...data});
+    if(!saveGoals())return;
+    goalForm.reset(); goalForm.hidden=true; editingGoalId=null; renderGoals(); renderCalendar();
+  });
+
+  const monthNames=["جانفي","فيفري","مارس","أفريل","ماي","جوان","جويلية","أوت","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  const weekdays=["الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
+  function renderCalendar() {
+    const grid=byId("calendarGrid"); grid.replaceChildren();
+    const year=calendarCursor.getFullYear(), month=calendarCursor.getMonth();
+    byId("calendarMonth").textContent=monthNames[month]+" "+year;
+    weekdays.forEach(day=>{const el=document.createElement("div");el.className="calendar-weekday";el.textContent=day;grid.append(el);});
+    const first=new Date(year,month,1); const offset=(first.getDay()+6)%7;
+    const daysInMonth=new Date(year,month+1,0).getDate();
+    const cells=Math.ceil((offset+daysInMonth)/7)*7;
+    for(let i=0;i<cells;i++){
+      const dayNum=i-offset+1; const dateObj=new Date(year,month,dayNum);
+      const date=[dateObj.getFullYear(),String(dateObj.getMonth()+1).padStart(2,"0"),String(dateObj.getDate()).padStart(2,"0")].join("-");
+      const button=document.createElement("button"); button.type="button"; button.className="calendar-day";
+      if(dayNum<1||dayNum>daysInMonth)button.classList.add("muted");
+      if(date===today())button.classList.add("today");
+      if(date===selectedCalendarDate)button.classList.add("selected");
+      button.textContent=String(dateObj.getDate());
+      const hasEvent=goals.some(g=>g.start===date||g.end===date);
+      if(hasEvent){const dot=document.createElement("span");dot.className="calendar-dot";dot.setAttribute("aria-hidden","true");button.append(dot);}
+      button.addEventListener("click",()=>{selectedCalendarDate=date;renderCalendar();});
+      grid.append(button);
+    }
+    const matches=goals.filter(g=>g.start===selectedCalendarDate||g.end===selectedCalendarDate);
+    const eventBox=byId("calendarEvents"); eventBox.replaceChildren();
+    const heading=document.createElement("strong"); heading.textContent="مواعيد "+selectedCalendarDate; eventBox.append(heading);
+    if(!matches.length){const p=document.createElement("p");p.textContent="لا توجد بداية أو نهاية هدف في هذا اليوم.";eventBox.append(p);}
+    matches.forEach(g=>{const p=document.createElement("p");p.textContent=(g.start===selectedCalendarDate?"بداية: ":"نهاية: ")+g.name;eventBox.append(p);});
+  }
+  byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
+  byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
+  saveGoals(); renderGoals(); renderCalendar();
+\n  elements.date.max = today();
   render();
   saveState();
 })();
