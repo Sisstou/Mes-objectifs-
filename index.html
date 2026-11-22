@@ -747,7 +747,8 @@
   byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
   byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
   saveGoals(); renderGoals(); renderCalendar();
-\n  elements.date.max = today();
+
+  elements.date.max = today();
   render();
   saveState();
 })();
