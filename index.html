@@ -248,6 +248,17 @@
       }
     }
 
+
+    .planner-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0 12px}
+    .task-form{display:grid;grid-template-columns:1.5fr .8fr 1.5fr 1fr auto;gap:7px;margin:10px 0 14px}
+    .task-form input,.task-form select{min-width:0;width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font-size:14px}
+    .planner-group{margin:12px 0}.planner-group h4{font-size:13px;color:#64748b;margin:0 0 6px}
+    .planner-task{display:flex;align-items:flex-start;gap:9px;background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:10px;margin:6px 0;color:#1f2937}
+    .planner-task.done{opacity:.58}.planner-task.done .planner-task-title{text-decoration:line-through}
+    .planner-task input{margin-top:4px;accent-color:#16a34a}.planner-task-main{flex:1;min-width:0}
+    .planner-task-title{font-weight:700;font-size:14px}.planner-task-meta{font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;overflow-wrap:anywhere}
+    .planner-task-actions{display:flex;gap:5px}.planner-task-actions button{border:0;background:#f1f5f9;border-radius:7px;padding:5px 7px;color:#475569}
+    @media(max-width:600px){.task-form{grid-template-columns:1fr 1fr}.task-form input:first-child,.task-form input:nth-child(3){grid-column:1/-1}.task-form button{grid-column:1/-1}.planner-head{align-items:flex-start}.planner-task{padding:9px}}
     /* واجهة مختصرة ومتجاوبة */
     body { background:#f1f5f9; }
     .header { padding:14px 16px; border-radius:0 0 18px 18px; }
@@ -390,44 +401,20 @@
       </div>
       </div>
     </details>
-\n    <!-- حضّر غدوة -->
-    <details class="compact-section section">
-      <summary>🌙 حضّر غدوة — قائمة المهام</summary>
+\n    <details class="compact-section section" id="tomorrowSection">
+      <summary>🌙 مهامي ومواعيدي <span id="taskProgress" style="color:#16a34a;font-size:12px"></span></summary>
       <div class="compact-content">
-      <div class="tomorrow">
-
-        <div class="task">
-          <label>
-            <input type="checkbox">
-            تحضير ملابس العمل
-          </label>
-        </div>
-
-        <div class="task">
-          <label>
-            <input type="checkbox">
-            تجهيز حقيبة العمل
-          </label>
-        </div>
-
-        <div class="task">
-          <label>
-            <input type="checkbox">
-            مراجعة مهام الغد
-          </label>
-        </div>
-
-        <div class="task">
-          <label>
-            <input type="checkbox">
-            ضبط المنبه
-          </label>
-        </div>
-
-      </div>
+        <div class="planner-head"><div><strong id="plannerDateLabel"></strong><p class="budget-note">قائمة مستقلة لكل يوم، ويمكن نسخها لليوم التالي.</p></div><button class="delete-expense" id="copyTasksTomorrow" type="button">نسخ لليوم التالي</button></div>
+        <form id="taskForm" class="task-form">
+          <input id="taskTitle" maxlength="80" placeholder="اسم المهمة أو الموعد..." required>
+          <input id="taskTime" type="time" aria-label="الوقت">
+          <input id="taskNote" maxlength="160" placeholder="شرح أو تفاصيل (اختياري)">
+          <select id="taskCategory"><option value="يومي">روتين يومي</option><option value="عمل">العمل</option><option value="مواعيد">مواعيد والتزامات</option><option value="شخصي">شخصي وترفيه</option><option value="عبادة">عبادة</option></select>
+          <button class="button" type="submit">+ إضافة</button>
+        </form>
+        <div id="taskList" class="planner-list" aria-live="polite"></div><p id="taskEmpty" class="empty-state" hidden>لا توجد مهام لهذا اليوم. أضف أول مهمة.</p>
       </div>
     </details>
-
     <!-- الميزانية الشهرية -->
     <details class="compact-section section" id="monthlyBudgetSection">
       <summary>📊 الميزانية الشهرية وتفاصيل الالتزامات</summary>
@@ -508,7 +495,7 @@
     { id: "legacy-food", title: "🍔 أكل", amount: 700, date: today(), note: "مصروف سابق" },
     { id: "legacy-shopping", title: "🛒 مشتريات", amount: 50, date: today(), note: "مصروف سابق" }
   ];
-  const taskInputs = Array.from(document.querySelectorAll(".tomorrow .task input[type='checkbox']"));
+  const taskInputs = [];
   const elements = {
     balance: document.getElementById("currentBalance"),
     today: document.getElementById("todayExpenses"),
@@ -621,7 +608,7 @@
       card.append(details, amount);
       elements.history.append(card);
     });
-    taskInputs.forEach((input, index) => { input.checked = state.tasks[index] === true; });
+
   }
 
   function deleteExpense(id) {
@@ -705,6 +692,47 @@
     });
   });
 
+
+  // مخطط مهام يومي مستقل لكل تاريخ
+  const PLANNER_KEY = "sissto_daily_planner_v2";
+  const plannerDate = datePlusDays(today(),1);
+  const plannerDefaults = [
+    ["صلاة الفجر","عبادة","","الصلاة في وقتها"],["تحضير ملابس العمل","عمل","",""],["تجهيز حقيبة العمل","عمل","",""],
+    ["مراجعة مهام الغد","عمل","","راجع الأولويات وما يلزم إنجازه"],["ضبط المنبه","يومي","",""],["زيارة المريض","مواعيد","","أضف الاسم أو العنوان"],
+    ["جمعية الحي","مواعيد","","اجتماع أو متابعة شؤون الحي"],["ذهاب في فسحة","شخصي","",""],["الذهاب للعشاء","شخصي","",""],
+    ["مشاهدة كرة القدم","شخصي","",""],["تذكير","مواعيد","","اكتب ما تريد تذكره"],["قراءة القرآن","عبادة","",""],["قراءة الأذكار","عبادة","",""]
+  ].map((x,i)=>({id:"starter-"+i,title:x[0],category:x[1],time:x[2],note:x[3],done:false}));
+  let plannerData={};
+  try{plannerData=JSON.parse(localStorage.getItem(PLANNER_KEY)||"{}");if(!plannerData||typeof plannerData!=="object"||Array.isArray(plannerData))plannerData={};}catch(_){plannerData={};}
+  if(!Array.isArray(plannerData[plannerDate]))plannerData[plannerDate]=plannerDefaults.map(t=>({...t}));
+  function savePlanner(){try{localStorage.setItem(PLANNER_KEY,JSON.stringify(plannerData));return true;}catch(_){alert("تعذر حفظ قائمة المهام.");return false;}}
+  function renderPlanner(){
+    byId("plannerDateLabel").textContent="مهام يوم "+plannerDate;
+    const tasks=plannerData[plannerDate]||[],done=tasks.filter(t=>t.done).length;
+    byId("taskProgress").textContent=done+" / "+tasks.length+" مكتملة";
+    const list=byId("taskList");list.replaceChildren();
+    ["يومي","عمل","مواعيد","شخصي","عبادة"].forEach(category=>{
+      const items=tasks.filter(t=>t.category===category);if(!items.length)return;
+      const group=document.createElement("section");group.className="planner-group";
+      const heading=document.createElement("h4");heading.textContent=category+" · "+items.length;group.append(heading);
+      items.forEach(task=>{
+        const row=document.createElement("div");row.className="planner-task"+(task.done?" done":"");
+        const check=document.createElement("input");check.type="checkbox";check.checked=!!task.done;
+        check.addEventListener("change",()=>{task.done=check.checked;savePlanner();renderPlanner();});
+        const main=document.createElement("div");main.className="planner-task-main";
+        const title=document.createElement("div");title.className="planner-task-title";title.textContent=task.title;
+        const meta=document.createElement("div");meta.className="planner-task-meta";meta.textContent=[task.time?"🕒 "+task.time:"دون وقت محدد",task.note||""].filter(Boolean).join(" · ");main.append(title,meta);
+        const actions=document.createElement("div");actions.className="planner-task-actions";
+        const edit=document.createElement("button");edit.type="button";edit.textContent="تعديل";edit.addEventListener("click",()=>{byId("taskTitle").value=task.title;byId("taskTime").value=task.time||"";byId("taskNote").value=task.note||"";byId("taskCategory").value=task.category;plannerData[plannerDate]=tasks.filter(t=>t.id!==task.id);savePlanner();renderPlanner();byId("taskTitle").focus();});
+        const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.addEventListener("click",()=>{if(confirm("حذف هذه المهمة؟")){plannerData[plannerDate]=tasks.filter(t=>t.id!==task.id);savePlanner();renderPlanner();}});
+        actions.append(edit,remove);row.append(check,main,actions);group.append(row);
+      });list.append(group);
+    });
+    byId("taskEmpty").hidden=tasks.length!==0;
+  }
+  byId("taskForm").addEventListener("submit",event=>{event.preventDefault();const title=byId("taskTitle").value.trim();if(!title)return;const tasks=plannerData[plannerDate]||[];tasks.push({id:"task-"+Date.now()+"-"+Math.random().toString(16).slice(2),title,category:byId("taskCategory").value,time:byId("taskTime").value,note:byId("taskNote").value.trim(),done:false});plannerData[plannerDate]=tasks;if(savePlanner()){byId("taskForm").reset();renderPlanner();}});
+  byId("copyTasksTomorrow").addEventListener("click",()=>{const nextDate=datePlusDays(plannerDate,1);if(plannerData[nextDate]&&plannerData[nextDate].length&&!confirm("توجد قائمة لليوم التالي. هل تريد استبدالها؟"))return;plannerData[nextDate]=(plannerData[plannerDate]||[]).map((t,i)=>({...t,id:"copy-"+Date.now()+"-"+i,done:false}));if(savePlanner())alert("تم نسخ المهام إلى "+nextDate+" دون نسخ حالات الإنجاز.");});
+  renderPlanner();
 
   // نظام الأهداف والتقويم
   const GOALS_KEY = "sissto_goals_v1";
@@ -942,7 +970,7 @@
     const heading=document.createElement("strong"); heading.textContent="مواعيد "+selectedCalendarDate; eventBox.append(heading);
     if(!matches.length){const p=document.createElement("p");p.textContent="لا توجد أهداف نشطة في هذا اليوم.";eventBox.append(p);}
     matches.forEach(g=>{const p=document.createElement("p");const phase=g.start===selectedCalendarDate?"بداية الهدف: ":g.end===selectedCalendarDate?"نهاية الهدف: ":"هدف مستمر: ";p.textContent=phase+g.name;eventBox.append(p);});
-    if(selectedCalendarDate===datePlusDays(today(),1)){const h=document.createElement("strong");h.textContent=" · مهام الغد";eventBox.append(h);taskInputs.forEach(input=>{const p=document.createElement("p");p.textContent=(input.checked?"✓ ":"○ ")+input.closest("label").textContent.trim();eventBox.append(p);});}
+    
   }
   byId("prevMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});
   byId("nextMonth").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
